@@ -18,17 +18,17 @@ python -m venv .venv
 # macOS/Linux:        source .venv/bin/activate
 python -m pip install -r requirements.txt
 python train_stoich_ode.py
-python -m uvicorn api:app --reload --host 127.0.0.1 --port 8000
+python -m uvicorn api:app --reload --host 127.0.0.1 --port 8001
 ```
 
-Open [http://127.0.0.1:8000](http://127.0.0.1:8000). In **TAB 03**, the “Local Python Model” panel sends inputs to FastAPI and displays predictions returned by the fitted model loaded from `models/stoich_ode_models.joblib`. FastAPI's interactive endpoint documentation is at [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs).
+Open [http://127.0.0.1:8001](http://127.0.0.1:8001). In **TAB 03**, the “Local Python Model” panel sends inputs to FastAPI and displays predictions returned by the fitted model loaded from `models/stoich_ode_models.joblib`. FastAPI's interactive endpoint documentation is at [http://127.0.0.1:8001/docs](http://127.0.0.1:8001/docs).
 
 The browser charts outside that panel remain visual demos. The local API panel is the end-to-end Python inference path. The public GitHub Pages preview cannot run the Python API; use the local instructions to run the trained model.
 
 ### API request example
 
 ```bash
-curl -X POST http://127.0.0.1:8000/api/predict \
+curl -X POST http://127.0.0.1:8001/api/predict \
   -H "Content-Type: application/json" \
   -d '{"model":"M4","initial_state":[1,1,0,0],"start_time":0,"end_time":20,"step_size":1}'
 ```
