@@ -21,8 +21,10 @@ import argparse
 import time
 import pathlib
 import tempfile
+from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
+import joblib
 try:
     from scipy.optimize import least_squares
 except ImportError as exc:
@@ -404,6 +406,39 @@ class SymbolicMechanisticNeuralODE:
         return Y_pred
 
 
+def save_model_artifact(model_out: pathlib.Path, models: dict, training_rows: int, training_end_s: float) -> pathlib.Path:
+    """Save fitted parameters and provenance in a portable joblib bundle.
+
+    The artifact stores plain parameter arrays rather than pickled model instances,
+    so api.py can rebuild the current model classes from the repository source.
+    """
+    model_out.parent.mkdir(parents=True, exist_ok=True)
+    model_states = {}
+    for key in ("M1", "M2", "M3"):
+        model = models[key]
+        model_states[key] = {
+            "kind": type(model).__name__,
+            "hidden_dim": int(model.hidden_dim),
+            "p": np.asarray(model.p, dtype=np.float64),
+        }
+    model_states["M4"] = {
+        "kind": type(models["M4"]).__name__,
+        "K": np.asarray(models["M4"].K, dtype=np.float64),
+        "feature_names": list(models["M4"].feature_names),
+    }
+    artifact = {
+        "format_version": 1,
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "dataset": "supplied synthetic chemical reaction CSVs",
+        "training_split": "reconstruction/train.csv",
+        "training_rows": int(training_rows),
+        "training_end_s": float(training_end_s),
+        "models": model_states,
+    }
+    joblib.dump(artifact, model_out, compress=3)
+    return model_out
+
+
 # ============================================================================
 # STEP 3: METRICS & FULL BENCHMARK RUNNER
 # ============================================================================
@@ -427,7 +462,7 @@ def compute_metrics(Y_true: np.ndarray, Y_pred: np.ndarray, m_total: float = 2.0
     }
 
 
-def run_complete_benchmark(data_dir: pathlib.Path):
+def run_complete_benchmark(data_dir: pathlib.Path, model_out: pathlib.Path | None = None):
     required_files = [
         data_dir / split / f"{kind}.csv"
         for split in ("reconstruction", "completion", "extrapolation")
@@ -479,6 +514,15 @@ def run_complete_benchmark(data_dir: pathlib.Path):
 
     m4 = SymbolicMechanisticNeuralODE()
     m4.fit(t_tr, Y_tr)
+
+    if model_out is None:
+        model_out = pathlib.Path("./models/stoich_ode_models.joblib")
+    saved_model_path = save_model_artifact(
+        model_out,
+        {"M1": m1, "M2": m2, "M3": m3, "M4": m4},
+        training_rows=len(t_tr),
+        training_end_s=float(t_tr[-1]),
+    )
 
     all_results = []
     for task in ["reconstruction", "completion", "extrapolation"]:
@@ -537,6 +581,7 @@ def run_complete_benchmark(data_dir: pathlib.Path):
     results_path = data_dir / "benchmark_results.csv"
     pd.DataFrame(all_results).to_csv(results_path, index=False)
     print(f"Saved measured model metrics to: {results_path.resolve()}")
+    print(f"Saved fitted model parameters to: {saved_model_path.resolve()}")
     return all_results, audit
 
 
@@ -554,8 +599,14 @@ if __name__ == "__main__":
         action="store_true",
         help="Create any missing synthetic demo CSVs. Existing files are preserved.",
     )
+    parser.add_argument(
+        "--model-out",
+        type=pathlib.Path,
+        default=pathlib.Path("./models/stoich_ode_models.joblib"),
+        help="Destination for the fitted model parameter bundle loaded by the FastAPI app.",
+    )
     args = parser.parse_args()
     if args.generate_demo_data:
         generate_kaggle_dataset(args.data_dir)
-    run_complete_benchmark(args.data_dir)
+    run_complete_benchmark(args.data_dir, args.model_out)
     print(f"\nCompleted full pipeline verification in {time.time() - t_start:.2f} seconds.")

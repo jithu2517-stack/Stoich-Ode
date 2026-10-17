@@ -1825,6 +1825,47 @@
       <!-- ================================================================= -->
       <div class="tab-panel" id="tab3">
 
+        <!-- LOCAL PYTHON MODEL: API INFERENCE FROM THE SAVED JOBLIB ARTIFACT -->
+        <div class="table-panel" style="margin-bottom: 14px;">
+          <div class="chart-panel-header">
+            <div class="chart-panel-title">LOCAL PYTHON MODEL // FASTAPI INFERENCE</div>
+            <span class="status-tag soft" id="local-api-status">CHECKING LOCAL API</span>
+          </div>
+          <div class="audit-card-body">
+            <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.55; margin-bottom:12px;">
+              These predictions come from the fitted Python model parameters in <span class="mono">models/stoich_ode_models.joblib</span>. The page sends your settings to the local FastAPI server and displays its response.
+            </div>
+            <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(135px,1fr)); gap:9px; margin-bottom:12px;">
+              <label class="mono" style="font-size:11px; color:var(--text-secondary);">MODEL
+                <select id="api-model-select" style="display:block; width:100%; margin-top:5px; padding:8px; background:var(--bg-recessed); color:var(--text-primary); border:1px solid var(--border-strong); font:inherit;">
+                  <option value="M4" selected>M4 · Sparse mechanistic</option>
+                  <option value="M3">M3 · Stoichiometric neural ODE</option>
+                  <option value="M2">M2 · Two-stage baseline</option>
+                  <option value="M1">M1 · Unconstrained baseline</option>
+                </select>
+              </label>
+              <label class="mono" style="font-size:11px; color:var(--sp-a);">INITIAL A (g)<input id="api-a0" type="number" step="0.1" min="0" value="1" style="display:block; width:100%; margin-top:5px; padding:8px; background:var(--bg-recessed); color:var(--text-primary); border:1px solid var(--border-strong); font:inherit;"></label>
+              <label class="mono" style="font-size:11px; color:var(--sp-b);">INITIAL B (g)<input id="api-b0" type="number" step="0.1" min="0" value="1" style="display:block; width:100%; margin-top:5px; padding:8px; background:var(--bg-recessed); color:var(--text-primary); border:1px solid var(--border-strong); font:inherit;"></label>
+              <label class="mono" style="font-size:11px; color:var(--sp-c);">INITIAL C (g)<input id="api-c0" type="number" step="0.1" min="0" value="0" style="display:block; width:100%; margin-top:5px; padding:8px; background:var(--bg-recessed); color:var(--text-primary); border:1px solid var(--border-strong); font:inherit;"></label>
+              <label class="mono" style="font-size:11px; color:var(--sp-d);">INITIAL D (g)<input id="api-d0" type="number" step="0.1" min="0" value="0" style="display:block; width:100%; margin-top:5px; padding:8px; background:var(--bg-recessed); color:var(--text-primary); border:1px solid var(--border-strong); font:inherit;"></label>
+              <label class="mono" style="font-size:11px; color:var(--text-secondary);">END TIME (s)<input id="api-end-time" type="number" step="1" min="0.1" max="200" value="20" style="display:block; width:100%; margin-top:5px; padding:8px; background:var(--bg-recessed); color:var(--text-primary); border:1px solid var(--border-strong); font:inherit;"></label>
+              <label class="mono" style="font-size:11px; color:var(--text-secondary);">MAX STEP SIZE (s)<input id="api-step-size" type="number" step="0.1" min="0.01" max="10" value="1" style="display:block; width:100%; margin-top:5px; padding:8px; background:var(--bg-recessed); color:var(--text-primary); border:1px solid var(--border-strong); font:inherit;"></label>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
+              <button class="inst-btn emerald" id="api-run-button" onclick="runLocalModelPrediction()">▶ RUN FITTED PYTHON MODEL</button>
+              <button class="inst-btn" onclick="checkLocalApiStatus()">CHECK API</button>
+              <a class="inst-btn" href="http://127.0.0.1:8000/docs" target="_blank" rel="noopener">LOCAL API DOCS ↗</a>
+            </div>
+            <div class="code-slab" id="api-result-summary" role="status" aria-live="polite" style="min-height:45px; white-space:pre-wrap;">Waiting for the local FastAPI service. Start it with <strong>python -m uvicorn api:app --reload</strong> from the project folder.</div>
+            <div class="data-table-wrap" style="max-height:250px; overflow:auto; margin-top:10px; display:none;" id="api-result-table-wrap">
+              <table class="inst-table">
+                <thead><tr><th>t (s)</th><th class="num" style="color:var(--sp-a);">A (g)</th><th class="num" style="color:var(--sp-b);">B (g)</th><th class="num" style="color:var(--sp-c);">C (g)</th><th class="num" style="color:var(--sp-d);">D (g)</th><th class="num">Total (g)</th></tr></thead>
+                <tbody id="api-result-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <!-- DRAG AND DROP CSV UPLOADER -->
         <div class="dropzone-panel" id="csv-dropzone">
           <div>
@@ -3650,6 +3691,83 @@ function downloadPredictionsCSV() {
   URL.revokeObjectURL(url);
 }
 
+function setLocalApiStatus(label, ready) {
+  const badge = document.getElementById('local-api-status');
+  if (!badge) return;
+  badge.textContent = label;
+  badge.className = 'status-tag ' + (ready ? 'exact' : 'soft');
+}
+
+async function checkLocalApiStatus() {
+  setLocalApiStatus('CHECKING LOCAL API', false);
+  try {
+    const response = await fetch('/api/health', { cache: 'no-store' });
+    const data = await response.json();
+    if (response.ok && data.status === 'ready') {
+      setLocalApiStatus('PYTHON API READY', true);
+      return data;
+    }
+    setLocalApiStatus(data.artifact_exists ? 'MODEL LOAD ERROR' : 'MODEL ARTIFACT MISSING', false);
+    document.getElementById('api-result-summary').textContent = data.message || 'The API is running, but the fitted model artifact is not ready. Run python train_stoich_ode.py.';
+    return data;
+  } catch (error) {
+    setLocalApiStatus('LOCAL API OFFLINE', false);
+    document.getElementById('api-result-summary').textContent = 'The static preview cannot run the Python model. In the downloaded project, open a terminal in the repo, install requirements, run python train_stoich_ode.py, then start FastAPI with python -m uvicorn api:app --reload. Open http://127.0.0.1:8000 to connect this panel to the fitted model.';
+    return null;
+  }
+}
+
+async function runLocalModelPrediction() {
+  const button = document.getElementById('api-run-button');
+  const summary = document.getElementById('api-result-summary');
+  const tableWrap = document.getElementById('api-result-table-wrap');
+  const tbody = document.getElementById('api-result-tbody');
+  const initialState = ['api-a0', 'api-b0', 'api-c0', 'api-d0'].map(id => Number(document.getElementById(id).value));
+  const endTime = Number(document.getElementById('api-end-time').value);
+  const stepSize = Number(document.getElementById('api-step-size').value);
+  const model = document.getElementById('api-model-select').value;
+  if (initialState.some(value => !Number.isFinite(value) || value < 0) || !Number.isFinite(endTime) || !Number.isFinite(stepSize) || endTime <= 0 || stepSize <= 0) {
+    summary.textContent = 'Enter finite, non-negative initial masses and positive end time / step size values.';
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'RUNNING PYTHON MODEL…';
+  setLocalApiStatus('REQUEST IN PROGRESS', false);
+  summary.textContent = 'Sending input to POST /api/predict…';
+  tableWrap.style.display = 'none';
+  try {
+    const response = await fetch('/api/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model,
+        initial_state: initialState,
+        start_time: 0,
+        end_time: endTime,
+        step_size: stepSize
+      })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.detail || 'FastAPI prediction request failed.');
+
+    const metrics = result.summary;
+    const rateLine = result.discovered_rates
+      ? `\nFitted rates: k₁=${result.discovered_rates.k1_for_A_plus_B_to_C_plus_D.toFixed(6)} g⁻¹s⁻¹ · k₂=${result.discovered_rates.k2_for_C_to_B.toFixed(6)} s⁻¹`
+      : '';
+    summary.textContent = `${result.model} // ${result.model_name}\nSource: ${result.source}\nTraining: ${result.training.training_split}, ${result.training.training_rows} rows through t=${result.training.training_end_s}s\nReturned ${metrics.rows} predictions · max mass drift ${metrics.max_mass_drift_g.toExponential(3)} g${rateLine}`;
+    tbody.innerHTML = result.predictions.map(row => `<tr><td>${row.t.toFixed(3)}</td><td class="num">${row.A.toFixed(6)}</td><td class="num">${row.B.toFixed(6)}</td><td class="num">${row.C.toFixed(6)}</td><td class="num">${row.D.toFixed(6)}</td><td class="num">${row.total_mass.toFixed(6)}</td></tr>`).join('');
+    tableWrap.style.display = 'block';
+    setLocalApiStatus('PREDICTION FROM PYTHON API', true);
+  } catch (error) {
+    summary.textContent = `${error.message}\n\nConfirm the project is opened at http://127.0.0.1:8000 and the model artifact exists. The API docs are available at /docs.`;
+    setLocalApiStatus('API REQUEST FAILED', false);
+  } finally {
+    button.disabled = false;
+    button.textContent = '▶ RUN FITTED PYTHON MODEL';
+  }
+}
+
 window.addEventListener('resize', () => {
   if (state.activeTab === 'tab1') drawTab1Charts();
   else if (state.activeTab === 'tab2') drawTab2Charts();
@@ -3661,6 +3779,7 @@ window.addEventListener('DOMContentLoaded', () => {
   injectRandomNaNs(0.15);
   loadSampleCSV('completion');
   refreshConsole();
+  checkLocalApiStatus();
 });
 </script>
 </body>
