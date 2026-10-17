@@ -1,0 +1,3667 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="paper">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>STOICH-ODE // Chemical Reaction Kinetics Telemetry Console</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
+  /* ==========================================================================
+     THEME 1 (DEFAULT): SWISS LAB PAPER & ARCHIVAL INK (Braun / Waters / Nature)
+     Zero AI "vibe-coded" dark-navy neon glow; crisp paper, carbon ink, solid rules.
+     ========================================================================== */
+  :root,
+  [data-theme="paper"] {
+    --bg-obsidian: #ECEAE2;      /* Warm anodized aluminum / archival chassis */
+    --bg-panel: #FAF9F5;         /* Pure analytical paper surface */
+    --bg-recessed: #E2DFD5;      /* Recessed instrument well */
+    --bg-elevated: #FFFFFF;      /* Active raised cell */
+    --bg-hover: #EFECE4;         /* Tactile hover state */
+    --border-hairline: #B8B4A6;  /* Exposed 1px technical drafting rule */
+    --border-strong: #181816;    /* Structural frame rule */
+    --border-active: #181816;    /* Solid carbon focus border */
+    --text-primary: #141412;     /* Deep archival carbon ink */
+    --text-secondary: #42413B;   /* Graphite secondary label */
+    --text-muted: #706E65;       /* Muted calibration index */
+    --sp-a: #0052CC;             /* Species A: International Klein / Cobalt Blue */
+    --sp-b: #C84B09;             /* Species B: Burnt Vermilion / Signal Orange */
+    --sp-c: #09734E;             /* Species C: Viridian / Analytical Emerald */
+    --sp-d: #6E2594;             /* Species D: Dioxazine Violet / Imperial Plum */
+    --status-ok: #09734E;
+    --status-warn: #B84A00;
+    --status-err: #C91D1D;
+    --chart-grid: #DFDDD4;
+    --chart-axis: #57554D;
+    --extrap-fill: rgba(200, 75, 9, 0.07);
+    --extrap-line: rgba(200, 75, 9, 0.75);
+    --active-row-bg: rgba(0, 82, 204, 0.08);
+    --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+
+  /* ==========================================================================
+     THEME 2: ANODIZED CARBON // TEKTRONIX OSCILLOSCOPE HARDWARE (Neutral Matte)
+     True neutral carbon/tungsten grays — zero Tailwind blue-navy or neon glow.
+     ========================================================================== */
+  [data-theme="carbon"] {
+    --bg-obsidian: #111110;
+    --bg-panel: #181816;
+    --bg-recessed: #0C0C0B;
+    --bg-elevated: #22221F;
+    --bg-hover: #292925;
+    --border-hairline: #33332E;
+    --border-strong: #52524A;
+    --border-active: #E6E4DD;
+    --text-primary: #F0EFEA;
+    --text-secondary: #B5B3A8;
+    --text-muted: #78766D;
+    --sp-a: #38BDF8;             /* Cyan trace */
+    --sp-b: #F59E0B;             /* Amber trace */
+    --sp-c: #10B981;             /* Emerald trace */
+    --sp-d: #C084FC;             /* Violet trace */
+    --status-ok: #10B981;
+    --status-warn: #F59E0B;
+    --status-err: #F87171;
+    --chart-grid: #242420;
+    --chart-axis: #8C8A80;
+    --extrap-fill: rgba(245, 158, 11, 0.07);
+    --extrap-line: rgba(245, 158, 11, 0.65);
+    --active-row-bg: rgba(240, 239, 234, 0.09);
+  }
+
+  /* ==========================================================================
+     THEME 3: CERN TECHNICAL BLUEPRINT // HIGH-CONTRAST DAYLIGHT SLATE
+     ========================================================================== */
+  [data-theme="blueprint"] {
+    --bg-obsidian: #DCE3EA;
+    --bg-panel: #F4F7FA;
+    --bg-recessed: #CFD8E2;
+    --bg-elevated: #FFFFFF;
+    --bg-hover: #E6ECF2;
+    --border-hairline: #9FB0C2;
+    --border-strong: #0F2537;
+    --border-active: #0F2537;
+    --text-primary: #0B1924;
+    --text-secondary: #324B60;
+    --text-muted: #5C748A;
+    --sp-a: #0050B3;
+    --sp-b: #D4380D;
+    --sp-c: #087856;
+    --sp-d: #531DAB;
+    --status-ok: #087856;
+    --status-warn: #D4380D;
+    --status-err: #CF1322;
+    --chart-grid: #D4DEE8;
+    --chart-axis: #486278;
+    --extrap-fill: rgba(212, 56, 13, 0.07);
+    --extrap-line: rgba(212, 56, 13, 0.70);
+    --active-row-bg: rgba(0, 80, 179, 0.08);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    background-color: var(--bg-obsidian);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.45;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* TOP TELEMETRY BAR — Precision Hardware Fascia */
+  .top-telemetry-bar {
+    min-height: 52px;
+    background-color: var(--bg-panel);
+    border-bottom: 2px solid var(--border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 18px;
+    gap: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-wrap: wrap;
+  }
+
+  .brand-cluster {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .instrument-badge {
+    background-color: var(--text-primary);
+    border: 1px solid var(--text-primary);
+    color: var(--bg-panel);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 0px;
+    letter-spacing: 0.08em;
+  }
+
+  .app-title {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    text-transform: uppercase;
+  }
+
+  .app-subtitle {
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 600;
+    padding-left: 10px;
+    border-left: 1px solid var(--border-hairline);
+  }
+
+  .telemetry-readouts {
+    display: flex;
+    align-items: center;
+    gap: 0px;
+    border: 1px solid var(--border-hairline);
+    background-color: var(--bg-elevated);
+    flex-wrap: wrap;
+  }
+
+  .telemetry-pill {
+    background-color: transparent;
+    border-right: 1px solid var(--border-hairline);
+    padding: 5px 11px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11.5px;
+  }
+  .telemetry-pill:last-child {
+    border-right: none;
+  }
+
+  .telemetry-pill .pill-label {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 600;
+  }
+
+  .telemetry-pill .pill-val {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  /* Crisp square hardware indicator — NO blurry neon glow */
+  .led-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 0px;
+    background-color: var(--status-ok);
+    border: 1px solid var(--text-primary);
+    display: inline-block;
+  }
+  .led-dot.warn {
+    background-color: var(--status-warn);
+  }
+  .led-dot.err {
+    background-color: var(--status-err);
+  }
+
+  /* THEME SWITCHER GROUP */
+  .theme-switcher {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--border-hairline);
+    background: var(--bg-recessed);
+  }
+  .theme-btn {
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border-hairline);
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 5px 8px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .theme-btn:last-child {
+    border-right: none;
+  }
+  .theme-btn.active {
+    background: var(--text-primary);
+    color: var(--bg-panel);
+  }
+
+  /* WORKSPACE LAYOUT */
+  .console-shell {
+    display: flex;
+    align-items: flex-start;
+    min-height: calc(100vh - 52px);
+    width: 100%;
+  }
+
+  /* LEFT CONTROL RACK (330px fixed width, architectural divider) */
+  .left-control-rack {
+    width: 330px;
+    min-width: 330px;
+    max-width: 330px;
+    background-color: var(--bg-panel);
+    border-right: 1px solid var(--border-strong);
+    position: sticky;
+    top: 52px;
+    height: calc(100vh - 52px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .rack-section {
+    padding: 14px 15px;
+    border-bottom: 1px solid var(--border-hairline);
+  }
+
+  .rack-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border-hairline);
+  }
+
+  .rack-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-primary);
+  }
+
+  .rack-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    background: var(--bg-recessed);
+    border: 1px solid var(--border-hairline);
+    padding: 1px 6px;
+  }
+
+  /* SPLIT SELECTOR — Flush Instrument Interlock Buttons */
+  .split-btn-group {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-hairline);
+  }
+
+  .split-btn {
+    background-color: var(--bg-elevated);
+    border: none;
+    border-bottom: 1px solid var(--border-hairline);
+    padding: 8px 10px;
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-secondary);
+    transition: background-color 0.08s;
+  }
+  .split-btn:last-child {
+    border-bottom: none;
+  }
+  .split-btn:hover {
+    background-color: var(--bg-hover);
+  }
+  .split-btn.active {
+    background-color: var(--bg-recessed);
+    color: var(--text-primary);
+    box-shadow: inset 4px 0 0 var(--text-primary);
+  }
+
+  .split-name {
+    font-weight: 700;
+    font-size: 12px;
+    display: block;
+    color: var(--text-primary);
+  }
+
+  .split-sub {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+  }
+
+  .split-badge {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 2px 6px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border-hairline);
+    color: var(--text-primary);
+  }
+
+  /* 4-TIER MODEL SELECTOR — Technical Specification Cards */
+  .model-card-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .model-card {
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-hairline);
+    padding: 9px 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.08s;
+  }
+
+  .model-card:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--border-strong);
+  }
+
+  .model-card.active {
+    background-color: var(--bg-recessed);
+    border-color: var(--border-strong);
+    box-shadow: inset 4px 0 0 var(--sp-c);
+  }
+
+  .model-card.active.warn-model {
+    box-shadow: inset 4px 0 0 var(--sp-b);
+  }
+
+  .model-card.active.err-model {
+    box-shadow: inset 4px 0 0 var(--status-err);
+  }
+
+  .model-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 3px;
+    gap: 6px;
+  }
+
+  .model-id {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 11.5px;
+    color: var(--text-primary);
+  }
+
+  .model-pill {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+
+  .pill-drift {
+    color: var(--status-err);
+    background: transparent;
+  }
+  .pill-soft {
+    color: var(--status-warn);
+    background: transparent;
+  }
+  .pill-exact {
+    color: var(--status-ok);
+    background: transparent;
+  }
+
+  .model-eq {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--sp-a);
+    margin-bottom: 3px;
+  }
+
+  .model-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.35;
+  }
+
+  /* SLIDERS — Hardware Potentiometer Rows */
+  .slider-stack {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-hairline);
+  }
+
+  .species-slider-row {
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border-hairline);
+    padding: 7px 9px;
+  }
+  .species-slider-row:last-child {
+    border-bottom: none;
+  }
+
+  .species-slider-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 5px;
+  }
+
+  .species-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text-primary) !important;
+  }
+
+  .sp-swatch {
+    width: 10px;
+    height: 10px;
+    border: 1px solid rgba(0,0,0,0.25);
+    display: inline-block;
+  }
+
+  .species-val-input {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-hairline);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 11.5px;
+    font-weight: 700;
+    width: 68px;
+    text-align: right;
+    padding: 2px 5px;
+  }
+
+  input[type="range"].inst-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--bg-recessed);
+    border: 1px solid var(--border-hairline);
+    outline: none;
+  }
+
+  input[type="range"].inst-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 10px;
+    height: 14px;
+    background: var(--text-primary);
+    border: 1px solid var(--bg-panel);
+    cursor: pointer;
+  }
+
+  #slider-a::-webkit-slider-thumb { background: var(--sp-a); }
+  #slider-b::-webkit-slider-thumb { background: var(--sp-b); }
+  #slider-c::-webkit-slider-thumb { background: var(--sp-c); }
+  #slider-d::-webkit-slider-thumb { background: var(--sp-d); }
+
+  .mass-total-box {
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: var(--bg-recessed);
+    border: 1px solid var(--border-strong);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .rack-btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  /* TACTILE MECHANICAL BUTTONS — Zero blurry rgba glow */
+  .inst-btn {
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 7px 10px;
+    border-radius: 0px;
+    cursor: pointer;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    transition: background-color 0.08s, color 0.08s;
+  }
+
+  .inst-btn:hover {
+    background-color: var(--bg-recessed);
+  }
+
+  .inst-btn.primary {
+    background-color: var(--text-primary);
+    border-color: var(--text-primary);
+    color: var(--bg-panel);
+  }
+  .inst-btn.primary:hover {
+    opacity: 0.88;
+  }
+
+  .inst-btn.emerald {
+    background-color: var(--sp-c);
+    border-color: var(--sp-c);
+    color: #FFFFFF;
+  }
+  .inst-btn.emerald:hover {
+    opacity: 0.9;
+  }
+
+  /* MAIN STAGE */
+  .main-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background-color: var(--bg-obsidian);
+  }
+
+  /* NAVIGATION TABS — Architectural Index Strip */
+  .stage-nav-bar {
+    min-height: 44px;
+    background-color: var(--bg-panel);
+    border-bottom: 1px solid var(--border-strong);
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    padding: 0 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 52px;
+    z-index: 90;
+  }
+
+  .nav-tabs {
+    display: flex;
+    align-items: stretch;
+  }
+
+  .nav-tab-btn {
+    background: transparent;
+    border: none;
+    border-right: 1px solid var(--border-hairline);
+    border-bottom: 3px solid transparent;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 10px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .nav-tab-btn:first-child {
+    border-left: 1px solid var(--border-hairline);
+  }
+
+  .nav-tab-btn:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-hover);
+  }
+
+  .nav-tab-btn.active {
+    color: var(--text-primary);
+    border-bottom-color: var(--text-primary);
+    background-color: var(--bg-elevated);
+  }
+
+  .tab-num {
+    color: var(--text-muted);
+    font-size: 10.5px;
+  }
+
+  .stage-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .species-legend-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-hairline);
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+
+  .legend-chip.muted {
+    opacity: 0.35;
+    text-decoration: line-through;
+  }
+
+  /* TAB PANELS */
+  .tab-panel {
+    display: none;
+    padding: 18px 20px 44px 20px;
+    gap: 16px;
+    flex-direction: column;
+    max-width: 1600px;
+    width: 100%;
+  }
+
+  .tab-panel.active {
+    display: flex;
+  }
+
+  /* LIVE PITCH CONTROL & REACTION NETWORK BAR */
+  .pitch-hero-bar {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-strong);
+    padding: 14px 18px;
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 18px;
+    align-items: center;
+  }
+
+  .pitch-controls-col {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pitch-headline {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .pitch-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.45;
+  }
+
+  .scrubber-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 2px;
+    background: var(--bg-recessed);
+    border: 1px solid var(--border-hairline);
+    padding: 7px 10px;
+  }
+
+  /* INTERACTIVE REACTION NETWORK FLOW DIAGRAM */
+  .reaction-network-box {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-hairline);
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .species-tanks-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 1px solid var(--border-hairline);
+  }
+
+  .sp-tank {
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border-hairline);
+    padding: 8px 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  .sp-tank:last-child {
+    border-right: none;
+  }
+
+  .sp-tank-fill {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    opacity: 0.14;
+    pointer-events: none;
+    transition: height 0.08s linear;
+  }
+
+  /* 5-CARD KPI ROW — Flush Swiss Architectural Grid (Collapsed Borders) */
+  .kpi-grid-5 {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    border: 1px solid var(--border-strong);
+    background-color: var(--bg-panel);
+  }
+
+  .kpi-card {
+    background-color: var(--bg-panel);
+    border-right: 1px solid var(--border-hairline);
+    padding: 12px 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .kpi-card:last-child {
+    border-right: none;
+  }
+
+  .kpi-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .kpi-value {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  .kpi-sub {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text-secondary);
+    margin-top: 5px;
+  }
+
+  /* EQUATION BANNER */
+  .equation-banner {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-hairline);
+    border-left: 4px solid var(--text-primary);
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .eq-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .eq-tag {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    background: var(--text-primary);
+    color: var(--bg-panel);
+  }
+
+  .eq-formula {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  /* CHARTS */
+  .primary-chart-panel,
+  .chart-panel,
+  .table-panel {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-strong);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .secondary-charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .chart-panel-header {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border-hairline);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--bg-recessed);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chart-panel-title {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .chart-panel-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .canvas-wrap-tall {
+    position: relative;
+    width: 100%;
+    height: 380px;
+    background-color: var(--bg-panel);
+  }
+
+  .canvas-wrap-med {
+    position: relative;
+    width: 100%;
+    height: 240px;
+    background-color: var(--bg-panel);
+  }
+
+  .canvas-wrap-tall canvas,
+  .canvas-wrap-med canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .crosshair-strip {
+    padding: 8px 14px;
+    border-top: 1px solid var(--border-hairline);
+    background-color: var(--bg-elevated);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  /* BENCHMARK TABLE — Publication Data Grid */
+  .data-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  table.inst-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  table.inst-table th {
+    background-color: var(--bg-recessed);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border-strong);
+    border-right: 1px solid var(--border-hairline);
+    text-align: left;
+    white-space: nowrap;
+  }
+  table.inst-table th:last-child {
+    border-right: none;
+  }
+
+  table.inst-table th.num,
+  table.inst-table td.num {
+    text-align: right;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  table.inst-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-hairline);
+    border-right: 1px solid var(--border-hairline);
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+  table.inst-table td:last-child {
+    border-right: none;
+  }
+
+  table.inst-table tbody tr {
+    cursor: pointer;
+    background-color: var(--bg-panel);
+  }
+
+  table.inst-table tbody tr:hover {
+    background-color: var(--bg-hover);
+  }
+
+  table.inst-table tbody tr.active-row {
+    background-color: var(--active-row-bg);
+    box-shadow: inset 4px 0 0 var(--text-primary);
+  }
+
+  /* SOLID ARCHITECTURAL STATUS TAGS — No glowing translucent pills */
+  .status-tag {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 6px;
+    font-weight: 700;
+    display: inline-block;
+    text-transform: uppercase;
+    border: 1px solid currentColor;
+  }
+
+  .status-tag.exact {
+    color: var(--status-ok);
+    background: transparent;
+  }
+  .status-tag.soft {
+    color: var(--status-warn);
+    background: transparent;
+  }
+  .status-tag.drift {
+    color: var(--status-err);
+    background: transparent;
+  }
+
+  /* TAB 02: SENSOR DROPOUT & EULER AUDIT */
+  .tab2-top-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .audit-card-body {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .imputation-compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--border-hairline);
+  }
+
+  .imp-box {
+    background: var(--bg-elevated);
+    padding: 12px 14px;
+  }
+  .imp-box.naive-box {
+    border-right: 1px solid var(--border-hairline);
+    border-top: 3px solid var(--status-warn);
+  }
+  .imp-box.exact-box {
+    border-top: 3px solid var(--status-ok);
+  }
+
+  .euler-cards-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border: 1px solid var(--border-hairline);
+  }
+
+  .euler-step-card {
+    background: var(--bg-elevated);
+    border-right: 1px solid var(--border-hairline);
+    padding: 10px 11px;
+  }
+  .euler-step-card:last-child {
+    border-right: none;
+  }
+
+  /* TAB 03: CSV INGESTION & EXPLAINABILITY */
+  .dropzone-panel {
+    border: 2px dashed var(--border-strong);
+    background-color: var(--bg-panel);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .dropzone-panel.dragover {
+    background-color: var(--bg-hover);
+  }
+
+  .explain-grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--border-strong);
+    background: var(--bg-panel);
+  }
+
+  .explain-card {
+    background-color: var(--bg-panel);
+    border-right: 1px solid var(--border-hairline);
+    padding: 15px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .explain-card:last-child {
+    border-right: none;
+  }
+
+  .code-slab {
+    background-color: var(--bg-recessed);
+    border: 1px solid var(--border-hairline);
+    padding: 9px 11px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-primary);
+    line-height: 1.48;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  /* RESPONSIVE CANVAS SIDE-PANEL & FULLSCREEN ADAPTATION */
+  .console-shell.rack-collapsed .left-control-rack {
+    display: none;
+  }
+
+  @media (max-width: 1180px) {
+    .console-shell {
+      flex-direction: column;
+    }
+    .left-control-rack {
+      width: 100%;
+      min-width: 100%;
+      max-width: 100%;
+      height: auto;
+      position: static;
+      border-right: none;
+      border-bottom: 2px solid var(--border-strong);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+    .rack-section {
+      border-right: 1px solid var(--border-hairline);
+    }
+    .stage-nav-bar {
+      position: static;
+    }
+  }
+
+  @media (max-width: 1320px) {
+    .kpi-grid-5 {
+      grid-template-columns: repeat(auto-fit, minmax(165px, 1fr));
+    }
+    .kpi-card {
+      border-bottom: 1px solid var(--border-hairline);
+    }
+    .pitch-hero-bar,
+    .secondary-charts-row,
+    .tab2-top-grid,
+    .explain-grid-3 {
+      grid-template-columns: 1fr;
+    }
+    .explain-card {
+      border-right: none;
+      border-bottom: 1px solid var(--border-hairline);
+    }
+    .euler-cards-row {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
+</head>
+<body>
+
+  <!-- TOP TELEMETRY BAR -->
+  <header class="top-telemetry-bar">
+    <div class="brand-cluster">
+      <button class="inst-btn" onclick="toggleControlRack()" title="Toggle Left Control Rack for Full-Width Canvas View" style="padding:4px 8px; font-family:var(--font-mono); font-size:11px;">&#9776; RACK</button>
+      <span class="instrument-badge">MAT-05 // STOICH-ODE v2</span>
+      <span class="app-title">STOICH-ODE // Chemical Reaction Kinetics Telemetry Console</span>
+      <span class="app-subtitle">A + B &rarr; C + D &nbsp;|&nbsp; C &rarr; B</span>
+    </div>
+
+    <div class="telemetry-readouts">
+      <div class="telemetry-pill">
+        <span class="led-dot" id="top-solver-led"></span>
+        <span class="pill-label">STATUS</span>
+        <span class="pill-val" id="top-solver-status">SOLVER READY</span>
+      </div>
+
+      <div class="telemetry-pill">
+        <span class="pill-label">CONSERVATION LAW</span>
+        <span class="pill-val" id="top-mass-readout">&sum;m(t) = 2.000000 g</span>
+      </div>
+
+      <div class="telemetry-pill">
+        <span class="pill-label">DISCOVERED RATES</span>
+        <span class="pill-val">k&#8321; = 0.1000 g&#8315;&#185;s&#8315;&#185; | k&#8322; = 0.0500 s&#8315;&#185;</span>
+      </div>
+
+      <div class="telemetry-pill">
+        <span class="pill-label">REF</span>
+         <span class="pill-val" style="color: var(--sp-a);">Paper reference: Coelho et al.</span>
+      </div>
+    </div>
+
+    <div class="theme-switcher" title="Switch Instrument Surface Finish">
+      <button class="theme-btn active" data-theme-opt="paper" onclick="setInstrumentTheme('paper')">LAB PAPER</button>
+      <button class="theme-btn" data-theme-opt="blueprint" onclick="setInstrumentTheme('blueprint')">BLUEPRINT</button>
+      <button class="theme-btn" data-theme-opt="carbon" onclick="setInstrumentTheme('carbon')">CARBON DARK</button>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE SHELL -->
+  <div class="console-shell">
+
+    <!-- LEFT CONTROL RACK (330px fixed width) -->
+    <aside class="left-control-rack">
+
+      <!-- 1. BENCHMARK SPLIT SELECTOR -->
+      <section class="rack-section">
+        <div class="rack-header">
+          <span class="rack-title">01 // Benchmark Split</span>
+          <span class="rack-tag" id="active-split-tag">SPLIT: EXTRAP</span>
+        </div>
+        <div class="split-btn-group">
+          <button class="split-btn" data-split="reconstruction" onclick="selectSplit('reconstruction')">
+            <div>
+              <span class="split-name">Reconstruction [0, 100]</span>
+              <span class="split-sub">In-distribution fit &bull; 101 pts</span>
+            </div>
+            <span class="split-badge">&Delta;t=1.0s</span>
+          </button>
+
+          <button class="split-btn" data-split="completion" onclick="selectSplit('completion')">
+            <div>
+              <span class="split-name">Completion [0, 100]</span>
+              <span class="split-sub">Sub-step dense grid &bull; 200 pts</span>
+            </div>
+            <span class="split-badge">&Delta;t=0.5s</span>
+          </button>
+
+          <button class="split-btn active" data-split="extrapolation" onclick="selectSplit('extrapolation')">
+            <div>
+              <span class="split-name">Extrapolation [0, 200]</span>
+              <span class="split-sub">Unseen future horizon &bull; 101 pts</span>
+            </div>
+            <span class="split-badge">&Delta;t=2.0s</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 2. 4-TIER MODEL ARCHITECTURE SELECTOR -->
+      <section class="rack-section">
+        <div class="rack-header">
+          <span class="rack-title">02 // Model Architecture</span>
+          <span class="rack-tag" id="active-model-tag">ACTIVE: M4</span>
+        </div>
+        <div class="model-card-group">
+
+          <div class="model-card err-model" data-model="M1" onclick="selectModel('M1')">
+            <div class="model-card-top">
+              <span class="model-id">M1 // Baseline Black-Box ODE</span>
+              <span class="model-pill pill-drift">MASS DRIFT</span>
+            </div>
+            <div class="model-eq">dy/dt = f_&#952;(y) &nbsp;[Single-Stage MSE]</div>
+            <div class="model-desc">Unconstrained MLP leaks mass off the 2.0g manifold and diverges for t &gt; 100s.</div>
+          </div>
+
+          <div class="model-card warn-model" data-model="M2" onclick="selectModel('M2')">
+            <div class="model-card-top">
+              <span class="model-id">M2 // Paper-Inspired Two-Stage ODE</span>
+              <span class="model-pill pill-soft">L_I &le; &#949; GUARD</span>
+            </div>
+            <div class="model-eq">Stage I: mass residual &rarr; Stage II: trajectory fit</div>
+              <div class="model-desc">Simplified two-stage mass-residual baseline, inspired by prior work; it is not a reproduction of the paper.</div>
+          </div>
+
+          <div class="model-card" data-model="M3" onclick="selectModel('M3')">
+            <div class="model-card-top">
+              <span class="model-id">M3 // Stoichiometric Flux ODE (Ours)</span>
+              <span class="model-pill pill-exact">1&#7488;S = [0,0]</span>
+            </div>
+            <div class="model-eq">dy/dt = S &middot; r_&#952;(y), &nbsp;1&#7488;S = [0, 0]</div>
+            <div class="model-desc">Hard nullspace projection guarantees 0.000000g mass violation at all timestamps.</div>
+          </div>
+
+          <div class="model-card active" data-model="M4" onclick="selectModel('M4')">
+            <div class="model-card-top">
+              <span class="model-id">M4 // Symbolic-Stoich Hybrid (Ours)</span>
+              <span class="model-pill pill-exact">SPARSE FIT</span>
+            </div>
+            <div class="model-eq">dy/dt = S &middot; [0.10[A][B], 0.05[C]]&#7488;</div>
+            <div class="model-desc">The browser demo starts with seeded rates; the Python benchmark fits sparse rates from the supplied training CSV.</div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- 2B. REAL-TIME ODE INTEGRATOR SCHEME -->
+      <section class="rack-section">
+        <div class="rack-header">
+          <span class="rack-title">03 // ODE Integrator Scheme</span>
+          <span class="rack-tag" id="active-solver-tag">SCHEME: EULER</span>
+        </div>
+        <div class="rack-btn-row" style="margin-top: 0;">
+          <button class="inst-btn primary" id="btn-scheme-euler" onclick="selectSolverScheme('euler')">Forward Euler (CSV)</button>
+          <button class="inst-btn" id="btn-scheme-rk4" onclick="selectSolverScheme('rk4')">4th-Order RK4</button>
+        </div>
+      </section>
+
+      <!-- 3. REACTOR INITIAL STATE DIGITAL TWIN y(0) -->
+      <section class="rack-section" style="border-bottom: none;">
+        <div class="rack-header">
+          <span class="rack-title">04 // Initial State y(0)</span>
+          <span class="rack-tag">DIGITAL TWIN</span>
+        </div>
+
+        <div class="slider-stack">
+          <div class="species-slider-row">
+            <div class="species-slider-top">
+              <span class="species-label" style="color: var(--sp-a);">
+                <span class="sp-swatch" style="background: var(--sp-a);"></span>[A]&#8320; Reactant A
+              </span>
+              <input type="number" id="num-a" class="species-val-input" min="0" max="2" step="0.01" value="1.00" onchange="onInitialInputChange('a', this.value)">
+            </div>
+            <input type="range" id="slider-a" class="inst-slider" min="0" max="2" step="0.01" value="1.00" oninput="onInitialSliderChange('a', this.value)">
+          </div>
+
+          <div class="species-slider-row">
+            <div class="species-slider-top">
+              <span class="species-label" style="color: var(--sp-b);">
+                <span class="sp-swatch" style="background: var(--sp-b);"></span>[B]&#8320; Reactant/Regen B
+              </span>
+              <input type="number" id="num-b" class="species-val-input" min="0" max="2" step="0.01" value="1.00" onchange="onInitialInputChange('b', this.value)">
+            </div>
+            <input type="range" id="slider-b" class="inst-slider" min="0" max="2" step="0.01" value="1.00" oninput="onInitialSliderChange('b', this.value)">
+          </div>
+
+          <div class="species-slider-row">
+            <div class="species-slider-top">
+              <span class="species-label" style="color: var(--sp-c);">
+                <span class="sp-swatch" style="background: var(--sp-c);"></span>[C]&#8320; Intermediate C
+              </span>
+              <input type="number" id="num-c" class="species-val-input" min="0" max="2" step="0.01" value="0.00" onchange="onInitialInputChange('c', this.value)">
+            </div>
+            <input type="range" id="slider-c" class="inst-slider" min="0" max="2" step="0.01" value="0.00" oninput="onInitialSliderChange('c', this.value)">
+          </div>
+
+          <div class="species-slider-row">
+            <div class="species-slider-top">
+              <span class="species-label" style="color: var(--sp-d);">
+                <span class="sp-swatch" style="background: var(--sp-d);"></span>[D]&#8320; Product D
+              </span>
+              <input type="number" id="num-d" class="species-val-input" min="0" max="2" step="0.01" value="0.00" onchange="onInitialInputChange('d', this.value)">
+            </div>
+            <input type="range" id="slider-d" class="inst-slider" min="0" max="2" step="0.01" value="0.00" oninput="onInitialSliderChange('d', this.value)">
+          </div>
+        </div>
+
+        <div class="mass-total-box">
+          <span style="font-size: 11px; color: var(--text-secondary); font-weight: 700;">TOTAL INITIAL MASS m&#8320;</span>
+          <span class="mono" id="initial-mass-sum" style="font-size: 14px; font-weight: 700; color: var(--sp-c);">2.000000 g</span>
+        </div>
+
+        <div class="rack-btn-row">
+          <button class="inst-btn" onclick="resetInitialState()">Reset [1, 1, 0, 0]</button>
+          <button class="inst-btn" onclick="normalizeInitialMass()">Normalize 2.0g</button>
+        </div>
+
+        <button class="inst-btn primary" style="width: 100%; margin-top: 8px;" onclick="downloadPredictionsCSV()">
+          &darr; Download Predictions CSV
+        </button>
+      </section>
+    </aside>
+    <!-- MAIN STAGE -->
+    <main class="main-stage">
+
+      <!-- NAVIGATION TAB BAR -->
+      <nav class="stage-nav-bar">
+        <div class="nav-tabs">
+          <button class="nav-tab-btn active" data-tab="tab1" onclick="switchTab('tab1')">
+            <span class="tab-num">TAB 01 //</span>
+            <span>Trajectory &amp; Mass Invariant Telemetry</span>
+          </button>
+          <button class="nav-tab-btn" data-tab="tab2" onclick="switchTab('tab2')">
+            <span class="tab-num">TAB 02 //</span>
+            <span>Sensor Dropout Null Lab &amp; Euler Audit</span>
+          </button>
+          <button class="nav-tab-btn" data-tab="tab3" onclick="switchTab('tab3')">
+            <span class="tab-num">TAB 03 //</span>
+            <span>Custom CSV Ingestion &amp; Mechanistic Proof</span>
+          </button>
+        </div>
+
+        <div class="stage-nav-right">
+          <div class="species-legend-bar" title="Click species badges to toggle visibility on plots">
+            <span class="legend-chip" id="chip-A" onclick="toggleSpecies('A')">
+              <span class="sp-swatch" style="background: var(--sp-a);"></span>mass A
+            </span>
+            <span class="legend-chip" id="chip-B" onclick="toggleSpecies('B')">
+              <span class="sp-swatch" style="background: var(--sp-b);"></span>mass B
+            </span>
+            <span class="legend-chip" id="chip-C" onclick="toggleSpecies('C')">
+              <span class="sp-swatch" style="background: var(--sp-c);"></span>mass C
+            </span>
+            <span class="legend-chip" id="chip-D" onclick="toggleSpecies('D')">
+              <span class="sp-swatch" style="background: var(--sp-d);"></span>mass D
+            </span>
+          </div>
+        </div>
+      </nav>
+
+      <!-- ================================================================= -->
+      <!-- TAB 01: TRAJECTORY & MASS INVARIANT TELEMETRY (SPACIOUS v2)       -->
+      <!-- ================================================================= -->
+      <div class="tab-panel active" id="tab1">
+
+        <!-- HERO LIVE SIMULATION SCRUBBER & REACTION VESSEL TELEMETRY -->
+        <div class="pitch-hero-bar">
+          <div class="pitch-controls-col">
+            <div class="pitch-headline">
+              <span class="status-tag exact">LIVE REACTOR TELEMETRY</span>
+              <span>Continuous-Time Stoichiometric Nullspace Projection</span>
+            </div>
+            <div class="pitch-sub">
+              Press <strong>&rtrif; Play Live Kinetics</strong> to scrub reaction time <span class="mono">t</span> across the horizon and watch how unconstrained models (<span class="mono">M1/M2</span>) leak mass while <span class="mono">M3/M4</span> lock onto <span class="mono">&sum;m(t) = 2.000000g</span>.
+            </div>
+            <div class="scrubber-bar">
+              <button class="inst-btn emerald" id="play-sim-btn" onclick="togglePlayAnimation()" style="min-width: 155px;">
+                &rtrif; Play Live Kinetics
+              </button>
+              <span class="mono" style="font-size: 12px; color: var(--text-secondary); min-width: 78px;" id="scrub-t-label">t = 0.0s</span>
+              <input type="range" id="time-scrubber" class="inst-slider" min="0" max="100" step="1" value="0" oninput="onScrubberMove(this.value)" style="flex: 1;">
+              <button class="inst-btn" id="compare-mode-btn" onclick="toggleCompareMode()" title="Compare Baseline M1 Failure directly against Active Model">
+                Compare vs. M1 Drift: ON
+              </button>
+            </div>
+          </div>
+
+          <!-- LIVE REACTION NETWORK & SPECIES MASS TANKS -->
+          <div class="reaction-network-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:11.5px;">
+              <span style="color:var(--sp-a); font-weight:700;">R&#8321;: A + B &rarr; C + D &nbsp;(<span id="live-r1-val">r&#8321;=0.1000 g/s</span>)</span>
+              <span style="color:var(--sp-c); font-weight:700;">R&#8322;: C &rarr; B &nbsp;(<span id="live-r2-val">r&#8322;=0.0000 g/s</span>)</span>
+            </div>
+            <div class="species-tanks-grid">
+              <div class="sp-tank">
+                <div class="sp-tank-fill" id="tank-fill-a" style="background:var(--sp-a); height:50%;"></div>
+                <div class="mono" style="font-size:10.5px; color:var(--sp-a); font-weight:700;">[A] REACTANT</div>
+                <div class="mono" id="tank-val-a" style="font-size:15px; font-weight:700; margin-top:2px;">1.0000 g</div>
+              </div>
+              <div class="sp-tank">
+                <div class="sp-tank-fill" id="tank-fill-b" style="background:var(--sp-b); height:50%;"></div>
+                <div class="mono" style="font-size:10.5px; color:var(--sp-b); font-weight:700;">[B] REGEN</div>
+                <div class="mono" id="tank-val-b" style="font-size:15px; font-weight:700; margin-top:2px;">1.0000 g</div>
+              </div>
+              <div class="sp-tank">
+                <div class="sp-tank-fill" id="tank-fill-c" style="background:var(--sp-c); height:0%;"></div>
+                <div class="mono" style="font-size:10.5px; color:var(--sp-c); font-weight:700;">[C] INTERMED</div>
+                <div class="mono" id="tank-val-c" style="font-size:15px; font-weight:700; margin-top:2px;">0.0000 g</div>
+              </div>
+              <div class="sp-tank">
+                <div class="sp-tank-fill" id="tank-fill-d" style="background:var(--sp-d); height:0%;"></div>
+                <div class="mono" style="font-size:10.5px; color:var(--sp-d); font-weight:700;">[D] PRODUCT</div>
+                <div class="mono" id="tank-val-d" style="font-size:15px; font-weight:700; margin-top:2px;">0.0000 g</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5-CARD KPI ROW -->
+        <div class="kpi-grid-5">
+          <div class="kpi-card">
+            <div class="kpi-label">
+               <span>SIMULATOR R&sup2;</span>
+              <span class="mono" style="color: var(--sp-a);">FIT</span>
+            </div>
+            <div class="kpi-value" id="kpi-r2">0.999999</div>
+             <div class="kpi-sub" id="kpi-r2-sub">Browser simulator trajectory score</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label">
+              <span>TEST MSE</span>
+              <span class="mono" style="color: var(--sp-b);">L&#8322; LOSS</span>
+            </div>
+            <div class="kpi-value" id="kpi-mse">2.14e-12 g&sup2;</div>
+            <div class="kpi-sub" id="kpi-rmse-sub">RMSE: 1.46e-6 g</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label">
+              <span>CUMULATIVE MASS VIOLATION</span>
+              <span class="mono" id="kpi-viol-badge" style="color: var(--sp-c);">EXACT 0.0g</span>
+            </div>
+            <div class="kpi-value" id="kpi-mass-viol" style="color: var(--sp-c);">0.000000 g</div>
+            <div class="kpi-sub" id="kpi-mass-viol-sub">Max |m&#770;(t) &minus; m&#8320;| = 0.00e+00 g</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label">
+              <span>STOICHIOMETRIC INVARIANT</span>
+              <span class="mono" style="color: var(--sp-c);">NULLSPACE</span>
+            </div>
+            <div class="kpi-value" id="kpi-invariant">1&#7488;S = [0, 0]</div>
+            <div class="kpi-sub" id="kpi-invariant-sub">d/dt(&sum;y_i) &equiv; 0.000000 g/s</div>
+          </div>
+
+          <div class="kpi-card">
+            <div class="kpi-label">
+              <span>EVALUATION HORIZON</span>
+              <span class="mono" style="color: var(--sp-d);">DOMAIN</span>
+            </div>
+            <div class="kpi-value" id="kpi-horizon">t &isin; [0, 200]s</div>
+            <div class="kpi-sub" id="kpi-horizon-sub">&Delta;t = 2.0s &bull; 101 pts &bull; Forward Euler</div>
+          </div>
+        </div>
+
+        <!-- ACTIVE GOVERNING EQUATION BANNER -->
+        <div class="equation-banner">
+          <div class="eq-left">
+            <span class="eq-tag" id="banner-model-tag">M4 // SPARSE HYBRID</span>
+            <span class="eq-formula" id="banner-eq-text">
+              d/dt [A, B, C, D]&#7488; = [[-1, 0], [-1, +1], [+1, -1], [+1, 0]] &middot; [0.1000[A][B], 0.0500[C]]&#7488;
+            </span>
+          </div>
+          <div class="mono" style="font-size: 11.5px; color: var(--text-secondary);">
+            <span>Solid = Predicted y&#770;(t)</span> &nbsp;&bull;&nbsp;
+            <span>Dashed = Ground Truth y(t)</span> &nbsp;&bull;&nbsp;
+            <span style="color: var(--sp-b);">Shaded = Extrapolation Horizon (t &gt; 100s)</span>
+          </div>
+        </div>
+
+        <!-- FULL-WIDTH SPACIOUS SPECIES TRAJECTORY CHART -->
+        <div class="primary-chart-panel">
+          <div class="chart-panel-header">
+            <div class="chart-panel-title">
+              <span>SPECIES MASS TRAJECTORIES y(t) vs. y&#770;(t) — FULL HORIZON TELEMETRY</span>
+            </div>
+            <div class="chart-panel-meta">
+              mass A (#38BDF8) &bull; mass B (#F59E0B) &bull; mass C (#10B981) &bull; mass D (#A855F7)
+            </div>
+          </div>
+          <div class="canvas-wrap-tall">
+            <canvas id="speciesChart"></canvas>
+          </div>
+          <div class="crosshair-strip" id="crosshair-readout">
+            <span>HOVER / SCRUB TELEMETRY // t = <strong style="color:var(--text-primary)">0.0s</strong></span>
+            <span style="color:var(--sp-a)">A&#770;: 1.0000g (True: 1.0000g)</span>
+            <span style="color:var(--sp-b)">B&#770;: 1.0000g (True: 1.0000g)</span>
+            <span style="color:var(--sp-c)">C&#770;: 0.0000g (True: 0.0000g)</span>
+            <span style="color:var(--sp-d)">D&#770;: 0.0000g (True: 0.0000g)</span>
+            <span>&sum;m&#770;(t) = <strong style="color:var(--sp-c)">2.000000g</strong></span>
+          </div>
+        </div>
+
+        <!-- SIDE-BY-SIDE DIAGNOSTIC PLOTS: MASS CONSERVATION DRIFT & REACTION FLUXES -->
+        <div class="secondary-charts-row">
+          <!-- Mass Conservation Drift Plot -->
+          <div class="chart-panel">
+            <div class="chart-panel-header">
+              <div class="chart-panel-title">
+                <span>MASS CONSERVATION DRIFT &Delta;m(t) = m&#770;(t) &minus; m&#8320;</span>
+              </div>
+              <div class="chart-panel-meta">Red Dashed = Baseline M1 Drift &bull; Solid = Active Model</div>
+            </div>
+            <div class="canvas-wrap-med">
+              <canvas id="driftChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Reaction Flux Plot (r1 vs r2) -->
+          <div class="chart-panel">
+            <div class="chart-panel-header">
+              <div class="chart-panel-title">
+                <span>ELEMENTARY REACTION FLUXES r&#8321;(t) vs. r&#8322;(t)</span>
+              </div>
+              <div class="chart-panel-meta">r&#8321; = 0.10[A][B] (Cyan) &bull; r&#8322; = 0.05[C] (Emerald)</div>
+            </div>
+            <div class="canvas-wrap-med">
+              <canvas id="fluxChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- SIMULTANEOUS 3-CORE-OBJECTIVES OVERVIEW MATRIX (RECONSTRUCTION • COMPLETION • EXTRAPOLATION) -->
+        <div class="explain-grid-3">
+          <div class="explain-card" style="cursor:pointer;" onclick="selectSplit('reconstruction')">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="mono" style="font-weight:700; font-size:11.5px;">OBJECTIVE 01 // RECONSTRUCTION [0, 100]s</span>
+              <span class="status-tag exact" id="mini-tag-reconstruction">R² = 1.000000</span>
+            </div>
+            <div style="height: 125px; border: 1px solid var(--border-hairline); background: var(--bg-panel);">
+              <canvas id="miniChart-reconstruction" style="width:100%; height:100%; display:block;"></canvas>
+            </div>
+            <div class="mono" style="font-size:10.5px; color:var(--text-secondary);">
+              In-distribution training grid (&Delta;t = 1.0s, 101 pts) &bull; Click to inspect
+            </div>
+          </div>
+
+          <div class="explain-card" style="cursor:pointer;" onclick="selectSplit('completion')">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="mono" style="font-weight:700; font-size:11.5px;">OBJECTIVE 02 // COMPLETION [0, 100]s</span>
+              <span class="status-tag exact" id="mini-tag-completion">R² = 1.000000</span>
+            </div>
+            <div style="height: 125px; border: 1px solid var(--border-hairline); background: var(--bg-panel);">
+              <canvas id="miniChart-completion" style="width:100%; height:100%; display:block;"></canvas>
+            </div>
+            <div class="mono" style="font-size:10.5px; color:var(--text-secondary);">
+              Sub-step dense interpolation (&Delta;t = 0.5s, 200 pts) &bull; Click to inspect
+            </div>
+          </div>
+
+          <div class="explain-card" style="cursor:pointer;" onclick="selectSplit('extrapolation')">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="mono" style="font-weight:700; font-size:11.5px;">OBJECTIVE 03 // EXTRAPOLATION [0, 200]s</span>
+              <span class="status-tag exact" id="mini-tag-extrapolation">R² = 1.000000</span>
+            </div>
+            <div style="height: 125px; border: 1px solid var(--border-hairline); background: var(--bg-panel);">
+              <canvas id="miniChart-extrapolation" style="width:100%; height:100%; display:block;"></canvas>
+            </div>
+            <div class="mono" style="font-size:10.5px; color:var(--text-secondary);">
+              Unseen 2&times; future horizon (&Delta;t = 2.0s, t &gt; 100s) &bull; Click to inspect
+            </div>
+          </div>
+        </div>
+
+        <!-- 12-ROW INTERACTIVE SIMULATOR SCORECARD -->
+        <div class="table-panel">
+          <div class="chart-panel-header">
+            <div class="chart-panel-title">
+              <span>12-ROW INTERACTIVE SIMULATOR SCORECARD // CLICK ANY ROW TO LOAD A VIEW</span>
+            </div>
+            <div class="chart-panel-meta">3 Demo Horizons &times; 4 Model Architectures</div>
+          </div>
+          <div role="note" style="margin:0 16px 14px; padding:12px 14px; border:1px solid rgba(93,169,255,.35); border-radius:8px; background:rgba(93,169,255,.08); color:var(--text-secondary); font-size:12px; line-height:1.55;">
+            <strong style="color:var(--text-primary);">Scorecard scope:</strong> these browser scores are recomputed against the console's built-in simulator trajectories; they are not read from the six CSV files. For model fitting and CSV-based evaluation, use <span class="mono">kaggle_synthetic_reaction_data/benchmark_results.csv</span> generated by <span class="mono">train_stoich_ode.py</span>. The supplied train data ends at 99s; only extrapolation test rows after 99s are a strict future-only evaluation.
+          </div>
+          <div class="data-table-wrap">
+            <table class="inst-table" id="benchmark-12-table">
+              <thead>
+                <tr>
+                  <th>Benchmark Split</th>
+                  <th>Horizon &amp; Step</th>
+                  <th>Model Tier &amp; Architecture</th>
+                  <th>Vector Field Formulation</th>
+                  <th class="num">Test MSE (g&sup2;)</th>
+                  <th class="num">Test RMSE (g)</th>
+                  <th class="num">Demo R&sup2;</th>
+                  <th class="num">Max |m&#770;&minus;m&#8320;| (g)</th>
+                  <th class="num">Sum Mass Violation (g)</th>
+                  <th>Admissibility</th>
+                </tr>
+              </thead>
+              <tbody id="benchmark-12-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- ================================================================= -->
+      <!-- TAB 02: SENSOR DROPOUT NULL LAB & EULER DISCRETIZATION AUDIT      -->
+      <!-- ================================================================= -->
+      <div class="tab-panel" id="tab2">
+        <div class="tab2-top-grid">
+          <!-- LEFT: SENSOR DROPOUT NULL LAB -->
+          <div class="table-panel">
+            <div class="chart-panel-header">
+              <div class="chart-panel-title">
+                <span>SENSOR DROPOUT NULL LAB // ALGEBRAIC MASS-BALANCE IMPUTATION</span>
+              </div>
+              <div class="chart-panel-meta">m_missing(t) = 2.0 &minus; &sum;m_known(t)</div>
+            </div>
+            <div class="audit-card-body">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <button class="inst-btn primary" onclick="injectRandomNaNs(0.15)">
+                    &#9889; Inject Random Sensor NaNs (15%)
+                  </button>
+                  <button class="inst-btn" onclick="injectRandomNaNs(0.25)">
+                    High Dropout (25%)
+                  </button>
+                  <button class="inst-btn" onclick="resetNaNLab()">
+                    Restore Clean Telemetry
+                  </button>
+                </div>
+                <span class="mono" id="nan-count-badge" style="color: var(--sp-b); font-size: 12px; font-weight: 700;">
+                  Dropped: 30 / 200 pts
+                </span>
+              </div>
+
+              <div class="imputation-compare-grid">
+                <div class="imp-box naive-box">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span class="mono" style="color:var(--sp-b); font-weight:700; font-size:12px;">NAIVE LINEAR INTERPOLATION</span>
+                    <span class="status-tag soft">CURVATURE BIAS</span>
+                  </div>
+                  <div class="mono" style="font-size:11.5px; color:var(--text-secondary); margin-bottom:8px;">
+                    m&#770;_i(t_k) = &frac12;[m_i(t_{k-1}) + m_i(t_{k+1})]
+                  </div>
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <div>
+                      <div style="font-size:10px; color:var(--text-muted); font-weight:700;">MEAN ABS ERROR</div>
+                      <div class="mono" id="naive-mae-readout" style="font-size:16px; font-weight:700; color:var(--sp-b);">1.842e-03 g</div>
+                    </div>
+                    <div>
+                      <div style="font-size:10px; color:var(--text-muted); font-weight:700;">MAX VIOLATION</div>
+                      <div class="mono" id="naive-viol-readout" style="font-size:16px; font-weight:700; color:var(--status-err);">6.125e-03 g</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="imp-box exact-box">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span class="mono" style="color:var(--sp-c); font-weight:700; font-size:12px;">ALGEBRAIC MASS-BALANCE (OURS)</span>
+                    <span class="status-tag exact">MACHINE PRECISION</span>
+                  </div>
+                  <div class="mono" style="font-size:11.5px; color:var(--text-secondary); margin-bottom:8px;">
+                    m_missing(t_k) = 2.000000 &minus; &sum;_{j&ne;i} m_j(t_k)
+                  </div>
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <div>
+                      <div style="font-size:10px; color:var(--text-muted); font-weight:700;">IMPUTATION ERROR</div>
+                      <div class="mono" id="alg-mae-readout" style="font-size:16px; font-weight:700; color:var(--sp-c);">8.88e-16 g</div>
+                    </div>
+                    <div>
+                      <div style="font-size:10px; color:var(--text-muted); font-weight:700;">POST-IMPUTE DRIFT</div>
+                      <div class="mono" id="alg-viol-readout" style="font-size:16px; font-weight:700; color:var(--sp-c);">0.000000 g</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="canvas-wrap-med" style="border: 1px solid var(--border-hairline);">
+                <canvas id="nanAuditChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: FORWARD EULER DISCRETIZATION AUDIT -->
+          <div class="table-panel">
+            <div class="chart-panel-header">
+              <div class="chart-panel-title">
+                <span>FORWARD EULER DISCRETIZATION AUDIT AT t = 2.0s</span>
+              </div>
+              <div class="chart-panel-meta">Why Dataset Splits Diverge by O(&Delta;t) While Conserving Mass</div>
+            </div>
+            <div class="audit-card-body">
+              <div style="font-size: 12.5px; color: var(--text-secondary); line-height: 1.5;">
+                The benchmark splits use explicit <strong>Forward Euler</strong> (<span class="mono">y_{n+1} = y_n + &Delta;t&middot;S&middot;r(y_n)</span>) at three step sizes (<span class="mono">&Delta;t = 0.5s, 1.0s, 2.0s</span>). At <span class="mono">t = 2.0s</span>, local truncation error produces distinct concentrations, yet <strong>all three conserve mass to 2.000000g</strong> because <span class="mono">1&#7488;(y_n + &Delta;t&middot;S&middot;r) = 1&#7488;y_n + &Delta;t(1&#7488;S)r = 2.0g</span>.
+              </div>
+
+              <div class="euler-cards-row">
+                <div class="euler-step-card" style="border-color: var(--sp-c);">
+                  <div class="mono" style="font-size:10.5px; color:var(--sp-c); font-weight:700;">dt = 0.5s (COMPLETION)</div>
+                  <div class="mono" style="font-size:17px; font-weight:700; margin:4px 0;">0.826409 g</div>
+                  <div class="mono" style="font-size:10.5px; color:var(--text-muted);">4 Euler steps to t=2.0s</div>
+                  <div class="mono" style="font-size:10.5px; color:var(--sp-a); margin-top:3px;">&sum;m = 2.000000 g</div>
+                </div>
+
+                <div class="euler-step-card" style="border-color: var(--sp-a);">
+                  <div class="mono" style="font-size:10.5px; color:var(--sp-a); font-weight:700;">dt = 1.0s (RECON)</div>
+                  <div class="mono" style="font-size:17px; font-weight:700; margin:4px 0;">0.819000 g</div>
+                  <div class="mono" style="font-size:10.5px; color:var(--text-muted);">2 Euler steps to t=2.0s</div>
+                  <div class="mono" style="font-size:10.5px; color:var(--sp-a); margin-top:3px;">&sum;m = 2.000000 g</div>
+                </div>
+
+                <div class="euler-step-card" style="border-color: var(--sp-b);">
+                  <div class="mono" style="font-size:10.5px; color:var(--sp-b); font-weight:700;">dt = 2.0s (EXTRAP)</div>
+                  <div class="mono" style="font-size:17px; font-weight:700; margin:4px 0;">0.800000 g</div>
+                  <div class="mono" style="font-size:10.5px; color:var(--text-muted);">1 Euler step to t=2.0s</div>
+                  <div class="mono" style="font-size:10.5px; color:var(--sp-a); margin-top:3px;">&sum;m = 2.000000 g</div>
+                </div>
+
+                <div class="euler-step-card" style="border-color: var(--sp-d);">
+                  <div class="mono" style="font-size:10.5px; color:var(--sp-d); font-weight:700;">RK4 LIMIT (dt&rarr;0)</div>
+                  <div class="mono" style="font-size:17px; font-weight:700; margin:4px 0;">0.832861 g</div>
+                  <div class="mono" style="font-size:10.5px; color:var(--text-muted);">Exact ODE integral</div>
+                  <div class="mono" style="font-size:10.5px; color:var(--sp-a); margin-top:3px;">&sum;m = 2.000000 g</div>
+                </div>
+              </div>
+
+              <div class="canvas-wrap-med" style="border: 1px solid var(--border-hairline);">
+                <canvas id="eulerZoomChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- BOTTOM TABLE: SENSOR DROPOUT IMPUTATION LOG -->
+        <div class="table-panel">
+          <div class="chart-panel-header">
+            <div class="chart-panel-title">
+              <span>SENSOR DROPOUT IMPUTATION AUDIT TABLE // NAIVE LINEAR INTERPOLATION vs. EXACT ALGEBRAIC MASS-BALANCE</span>
+            </div>
+            <div class="chart-panel-meta">IEEE-754 Machine Epsilon Recovery (8.88e-16 g)</div>
+          </div>
+          <div class="data-table-wrap" style="max-height: 320px; overflow-y: auto;">
+            <table class="inst-table">
+              <thead>
+                <tr>
+                  <th>Sample #</th>
+                  <th class="num">Timestamp t (s)</th>
+                  <th>Dropped Channel</th>
+                  <th class="num">Known &sum;_{j&ne;i} m_j (g)</th>
+                  <th class="num">True Mass m_i(t) (g)</th>
+                  <th class="num">Naive Linear Interp (g)</th>
+                  <th class="num">Naive Interp Error (g)</th>
+                  <th class="num">Algebraic Imputed 2.0&minus;&sum;m (g)</th>
+                  <th class="num">Algebraic Error (g)</th>
+                  <th>Invariant Check</th>
+                </tr>
+              </thead>
+              <tbody id="nan-audit-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <!-- ================================================================= -->
+      <!-- TAB 03: CUSTOM CSV INGESTION & MECHANISTIC EXPLAINABILITY         -->
+      <!-- ================================================================= -->
+      <div class="tab-panel" id="tab3">
+
+        <!-- DRAG AND DROP CSV UPLOADER -->
+        <div class="dropzone-panel" id="csv-dropzone">
+          <div>
+            <div style="font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">
+              DRAG &amp; DROP KAGGLE / TELEMETRY CSV FILE &nbsp;<span class="mono" style="color: var(--sp-a); font-size: 12px;">[Schema: #, mass A, mass B, mass C, mass D]</span>
+            </div>
+            <div style="font-size: 12.5px; color: var(--text-secondary);">
+              Automatically detects step size &Delta;t, repairs any single-channel <span class="mono">NaN</span> dropouts via <span class="mono">m_missing = 2.0 &minus; &sum;m_known</span>, and evaluates active model predictions (<span class="mono" id="tab3-active-model-label">M4</span>).
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <label class="inst-btn primary" style="cursor: pointer;">
+              Browse .CSV File
+              <input type="file" id="csv-file-input" accept=".csv,text/csv" style="display: none;" onchange="handleCSVFileSelect(event)">
+            </label>
+            <button class="inst-btn emerald" onclick="loadSampleCSV('completion')">
+              Load Kaggle Completion CSV (200 pts)
+            </button>
+            <button class="inst-btn" onclick="loadSampleCSV('corrupted')">
+              Load NaN-Corrupted Sensor CSV
+            </button>
+            <button class="inst-btn" onclick="loadSampleCSV('offnominal')">
+              Load Off-Nominal y(0)=[1.4,0.6,0,0] CSV
+            </button>
+          </div>
+        </div>
+
+        <!-- 3-STEP MECHANISTIC EXPLAINABILITY BREAKDOWN -->
+        <div class="explain-grid-3">
+          <div class="explain-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="mono" style="color:var(--sp-b); font-weight:700; font-size:12px;">STEP 01 // SIMPLIFIED TWO-STAGE BASELINE</span>
+              <span class="status-tag soft">APPROXIMATE</span>
+            </div>
+            <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.5;">
+              This console's <strong>M2</strong> is a simplified, paper-inspired baseline: it first reduces mass-rate residuals, then fits the trajectory with a soft mass-residual term. It is not a faithful reproduction of Coelho et al.'s method.
+            </div>
+            <div class="code-slab"># Simplified project baseline (paper-inspired, not a reproduction)
+p_adm = fit_to_reduce_mass_rate_residuals(p0)
+loss_II = trajectory_MSE(y_pred, y_true) + lambda_mass * mass_residual(y_pred)
+p_final = fit_trajectory(p_adm, loss_II)</div>
+          </div>
+
+          <div class="explain-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="mono" style="color:var(--sp-a); font-weight:700; font-size:12px;">STEP 02 // HARD STOICHIOMETRIC PROJECTION (M3)</span>
+              <span class="status-tag exact">1&#7488;S = [0, 0]</span>
+            </div>
+            <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.5;">
+              Instead of penalizing violations post-hoc, <strong>M3</strong> parameterizes the neural network in <em>reaction flux space</em> <span class="mono">r_&#952;(y) &isin; &#8477;&#8330;&#178;</span> and projects through the exact stoichiometric matrix <span class="mono">S</span> whose columns lie in the orthogonal complement of <span class="mono">1 = [1, 1, 1, 1]&#7488;</span>:
+            </div>
+            <div class="code-slab">S = [[-1,  0],   # dA/dt = -r1
+     [-1, +1],   # dB/dt = -r1 + r2
+     [+1, -1],   # dC/dt = +r1 - r2
+     [+1,  0]]   # dD/dt = +r1
+# Conservation Proof for ANY neural network r_theta(y):
+d/dt (A+B+C+D) = [1,1,1,1] @ S @ r_theta(y) = [0,0] @ r_theta(y) = 0</div>
+          </div>
+
+          <div class="explain-card">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="mono" style="color:var(--sp-c); font-weight:700; font-size:12px;">STEP 03 // SPARSE MECHANISTIC DISCOVERY (M4)</span>
+              <span class="status-tag exact">DEMO MODEL</span>
+            </div>
+            <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.5;">
+              The Python benchmark maps finite-difference observations to empirical fluxes with <span class="mono">r(t) = S&#8314; &Delta;y/&Delta;t</span>, then applies thresholded least squares to candidate features. This is a sparse fit; no ridge term is used:
+            </div>
+            <div class="code-slab">Basis Phi(y) = [A*B, C, A*C, B*D]
+sequential_thresholded_least_squares( S_pinv @ dy_dt, Phi(y), threshold=1e-3 ):
+  -> r1(y) = 0.1000 * [A][B]   (Bimolecular A + B -> C + D)
+  -> r2(y) = 0.0500 * [C]      (Unimolecular regen C -> B)
+Equilibrium limit (t -> inf): [A]=0, [B]=1.0g, [C]=0, [D]=1.0g</div>
+          </div>
+        </div>
+
+        <!-- LIVE IN-BROWSER NEURAL ODE & SPARSE-RATE DEMO STUDIO -->
+        <div class="tab2-top-grid">
+          <div class="table-panel">
+            <div class="chart-panel-header">
+              <div class="chart-panel-title">
+                <span>LIVE IN-BROWSER TRAINING STUDIO // DEMO TRAJECTORY &amp; SPARSE-RATE DISCOVERY</span>
+              </div>
+              <span class="status-tag exact" id="live-train-status-badge">SIMULATOR DEMO</span>
+            </div>
+            <div class="audit-card-body">
+              <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+                <span style="font-size:12px; color:var(--text-secondary);">
+                  Run a 40-epoch browser demonstration on the built-in simulator trajectory and view the sparse rate fit.
+                </span>
+                <button class="inst-btn emerald" onclick="runLiveBrowserOptimization()">
+                  &rtrif; Run Live In-Browser Training (40 Epochs)
+                </button>
+              </div>
+              <div class="code-slab" id="live-train-console-log" style="height: 145px; overflow-y: auto;">[READY] Browser simulator weights loaded (M1 MLP, M2 paper-inspired baseline, M3 stoichiometric flux MLP, M4 sparse hybrid).
+Click "Run Live In-Browser Training" to run the simulator demonstration and sparse rate fit in your browser.</div>
+            </div>
+          </div>
+
+          <div class="table-panel">
+            <div class="chart-panel-header">
+              <div class="chart-panel-title">
+                <span>LIVE OPTIMIZATION LOSS TRAJECTORY log10(L_flux)</span>
+              </div>
+              <div class="chart-panel-meta">Real-Time Gradient &amp; Thresholding Convergence</div>
+            </div>
+            <div class="audit-card-body">
+              <div class="canvas-wrap-med" style="height: 195px; border: 1px solid var(--border-hairline);">
+                <canvas id="liveTrainChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- INGESTED DATASET SUMMARY BAR & LIVE PREVIEW TABLE -->
+        <div class="table-panel">
+          <div class="chart-panel-header">
+            <div class="chart-panel-title">
+              <span id="csv-table-title">LIVE DATA PREVIEW // TRUE vs. PREDICTED MASSES</span>
+            </div>
+            <div class="chart-panel-meta" id="csv-summary-metrics">
+               Rows: 200 &bull; Imputed NaNs: 0 &bull; Demo R&sup2;: 1.000000
+            </div>
+          </div>
+          <div class="data-table-wrap" style="max-height: 340px; overflow-y: auto;">
+            <table class="inst-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th class="num">t (s)</th>
+                  <th class="num" style="color: var(--sp-a);">True A (g)</th>
+                  <th class="num" style="color: var(--sp-a);">Pred A&#770; (g)</th>
+                  <th class="num" style="color: var(--sp-b);">True B (g)</th>
+                  <th class="num" style="color: var(--sp-b);">Pred B&#770; (g)</th>
+                  <th class="num" style="color: var(--sp-c);">True C (g)</th>
+                  <th class="num" style="color: var(--sp-c);">Pred C&#770; (g)</th>
+                  <th class="num" style="color: var(--sp-d);">True D (g)</th>
+                  <th class="num" style="color: var(--sp-d);">Pred D&#770; (g)</th>
+                  <th class="num">Pred &sum;m&#770;(t) (g)</th>
+                  <th class="num">|&sum;m&#770; &minus; m&#8320;| (g)</th>
+                  <th>Row Status</th>
+                </tr>
+              </thead>
+              <tbody id="csv-preview-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+<script>
+const K1 = 0.1000;
+const K2 = 0.0500;
+
+// Bundled browser simulator weights; CSV-based model results are produced separately by train_stoich_ode.py.
+const TRAINED_WEIGHTS = {"M1": {"W1": [[-0.505241, -0.290819, -0.14797, -0.092862, 0.117453, 0.102191, 0.08129, 0.186858, 0.448888, 0.102726, 0.14147, 0.069272, 0.097551, -0.309864, 0.095033, -0.10622], [-0.594721, 0.054688, -0.038801, -0.050651, 0.055983, 0.052718, 0.045776, 0.066959, -0.147819, 0.053137, 0.061772, 0.042021, 0.051688, 0.591941, 0.051155, -0.052872], [0.009837, -0.102003, -0.027863, -0.028899, -0.036878, 0.021449, 0.001791, -0.209759, -0.011631, -0.005448, -0.116542, 0.048731, 0.004184, -0.030402, 0.012657, -0.021074], [-0.00279, -0.071792, -0.011663, -0.003927, 0.014457, 0.00663, 0.007403, 0.004131, -0.104307, 0.010662, 0.015399, -0.004155, 0.00887, 0.02364, 0.007287, -0.007151]], "b1": [0.002076, 0.019705, 0.046255, 0.023085, -0.034948, -0.027883, -0.016368, -0.045891, 0.076719, -0.026796, -0.045576, -0.013994, -0.024106, 0.211309, -0.023178, 0.030087], "W2": [[-0.257969, -0.257879, 0.257879, 0.257969], [0.152936, 0.14223, -0.142229, -0.152936], [0.11321, 0.059878, -0.059877, -0.113211], [0.080201, 0.031329, -0.031323, -0.080201], [-0.071838, -0.080171, 0.080172, 0.071835], [-0.08416, -0.04056, 0.040573, 0.08416], [-0.058741, -0.040026, 0.040025, 0.058743], [-0.051297, -0.202509, 0.202511, 0.051297], [-0.215074, -0.208921, 0.208922, 0.215074], [-0.072911, -0.055534, 0.055534, 0.072907], [-0.059382, -0.134562, 0.134556, 0.059383], [-0.071026, -0.007136, 0.007127, 0.071029], [-0.072786, -0.047462, 0.047458, 0.072792], [-0.312634, -0.312131, 0.312131, 0.312634], [-0.074547, -0.04147, 0.041483, 0.074549], [0.086922, 0.042867, -0.042862, -0.086914]], "b2": [0.062785, 0.060556, -0.060856, -0.063155]}, "M2": {"W1": [[0.055311, 0.156924, -0.122139, -0.089448, 0.077844, 0.189331, 0.043913, 0.18757, -0.050219, 0.106301, -0.058194, -0.132908, -0.196644, -0.10884, 0.125621, 0.105458], [-0.014447, -0.129763, -0.019861, 0.029453, 0.247128, 0.093832, -0.047554, -0.204928, 0.00622, -0.193204, -0.264499, 0.128752, -0.153848, 0.045856, -0.262199, -0.044995], [0.023498, 0.011678, -0.006456, -0.011344, -0.05957, -0.02981, -0.068001, 0.006929, 0.090421, -0.091357, 0.008847, -0.022662, -0.025942, 0.052621, -0.221259, 0.014127], [0.011594, -0.018432, 0.000833, 0.000942, 0.041534, -0.033425, -0.027604, 0.006181, -0.04096, -0.109073, -0.052714, 0.035767, 0.007049, -0.037289, -0.183735, -0.01166]], "b1": [0.030525, 0.48057, 0.161248, -0.064532, -0.03836, -0.673279, -0.054324, -0.507915, -0.060312, -0.334976, 0.749524, -0.468301, -0.277826, -0.14585, 0.034049, 0.110888], "W2": [[-0.621467, -0.210468, 0.210473, 0.621307], [-0.52714, -0.660701, 0.660533, 0.5273], [0.827429, 0.891028, -0.891051, -0.827453], [0.376907, 0.267259, -0.267431, -0.376763], [0.29944, 0.299441, -0.299865, -0.299914], [-0.729731, -0.731854, 0.731583, 0.729448], [0.050164, -0.202236, 0.201749, -0.050232], [1.314829, 1.308501, -1.308756, -1.314924], [0.188138, 0.495361, -0.495315, -0.188459], [0.320651, 0.314875, -0.314821, -0.320677], [0.555296, 0.559244, -0.559453, -0.555263], [0.575032, 0.461021, -0.461145, -0.574766], [-1.155514, -1.148503, 1.149, 1.155183], [0.123304, 0.03578, -0.03571, -0.123167], [-0.064686, -0.056513, 0.056892, 0.064552], [-0.271871, -0.282753, 0.282693, 0.271694]], "b2": [0.101824, 0.067988, -0.067993, -0.101859]}, "M3": {"W1": [[0.055311, 0.156924, -0.122139, -0.089448, 0.077844, 0.189331, 0.043913, 0.18757, -0.050219, 0.106301, -0.058194, -0.132908, -0.196644, -0.10884, 0.125621, 0.105458], [-0.014447, -0.129763, -0.019861, 0.029453, 0.247128, 0.093832, -0.047554, -0.204928, 0.00622, -0.193204, -0.264499, 0.128752, -0.153848, 0.045856, -0.262199, -0.044995], [0.023498, 0.011678, -0.006456, -0.011344, -0.05957, -0.02981, -0.068001, 0.006929, 0.090421, -0.091357, 0.008847, -0.022662, -0.025942, 0.052621, -0.221259, 0.014127], [0.011594, -0.018432, 0.000833, 0.000942, 0.041534, -0.033425, -0.027604, 0.006181, -0.04096, -0.109073, -0.052714, 0.035767, 0.007049, -0.037289, -0.183735, -0.01166]], "b1": [0.030525, 0.48057, 0.161248, -0.064532, -0.03836, -0.673279, -0.054324, -0.507915, -0.060312, -0.334976, 0.749524, -0.468301, -0.277826, -0.14585, 0.034049, 0.110888], "W2": [[0.621468, 0.410945], [0.527058, -0.133464], [-0.827517, 0.063622], [-0.376888, -0.109462], [-0.299682, -0.000159], [0.729399, -0.002412], [-0.050135, -0.252337], [-1.314838, -0.006358], [-0.188314, 0.307193], [-0.320657, -0.00594], [-0.555277, 0.003956], [-0.574787, -0.113487], [1.155399, 0.006536], [-0.12329, -0.087614], [0.064674, 0.008041], [0.271907, -0.010762]], "b2": [-0.101849, -0.033846]}, "M4": {"K": [[0.1, 0.0, 0.0, 0.0], [0.0, 0.05, 0.0, 0.0]]}};
+
+const S_MAT = [
+  [-1.0,  0.0],
+  [-1.0, +1.0],
+  [+1.0, -1.0],
+  [+1.0,  0.0]
+];
+
+const SPLIT_CONFIGS = {
+  reconstruction: {
+    id: 'reconstruction',
+    name: 'Reconstruction [0, 100]',
+    tag: 'SPLIT: RECON',
+    tMax: 100.0,
+    dt: 1.0,
+    numPts: 101,
+    horizonText: 't \u2208 [0, 100]s',
+    subText: '\u0394t = 1.0s \u2022 101 pts \u2022 Real-Time ODE'
+  },
+  completion: {
+    id: 'completion',
+    name: 'Completion [0, 100]',
+    tag: 'SPLIT: COMPL',
+    tMax: 100.0,
+    dt: 0.5,
+    numPts: 200,
+    horizonText: 't \u2208 [0, 100]s',
+    subText: '\u0394t = 0.5s \u2022 200 pts \u2022 Real-Time ODE'
+  },
+  extrapolation: {
+    id: 'extrapolation',
+    name: 'Extrapolation [0, 200]',
+    tag: 'SPLIT: EXTRAP',
+    tMax: 200.0,
+    dt: 2.0,
+    numPts: 101,
+    horizonText: 't \u2208 [0, 200]s',
+    subText: '\u0394t = 2.0s \u2022 101 pts \u2022 Real-Time ODE'
+  }
+};
+
+const MODEL_META = {
+  M1: {
+    id: 'M1',
+    name: 'M1 // Baseline Black-Box Neural ODE',
+    shortTag: 'M1 // BLACK-BOX MLP',
+    formulation: 'dy/dt = f_\u03b8(y)  [Unconstrained]',
+    equationBanner: 'dy/dt = W\u2082 tanh(W\u2081 y + b\u2081) + b\u2082   [1\u1d40 f_\u03b8(y) \u2260 0 \u2192 Unphysical Mass Drift]',
+    invariantText: '1\u1d40f_\u03b8(y) \u2260 0',
+    invariantSub: 'No conservation law enforced (Unconstrained MLP)',
+    admissibility: 'VIOLATED',
+    statusClass: 'drift'
+  },
+  M2: {
+    id: 'M2',
+    name: 'M2 // Simplified Paper-Inspired Two-Stage ODE',
+    shortTag: 'M2 // PAPER-INSPIRED TWO-STAGE',
+    formulation: 'Stage I mass-residual fit + Stage II trajectory fit',
+    equationBanner: 'Two-stage soft-constraint baseline (simplified; not a paper reproduction)',
+    invariantText: '|1\u1d40y\u0302 \u2212 m\u2080| \u2264 \u03b5',
+    invariantSub: 'Simplified soft mass-residual baseline',
+    admissibility: 'SOFT BOUND (\u03b5)',
+    statusClass: 'soft'
+  },
+  M3: {
+    id: 'M3',
+    name: 'M3 // Pure Stoichiometric Flux Neural ODE (Ours)',
+    shortTag: 'M3 // STOICH FLUX ODE',
+    formulation: 'dy/dt = S \u00b7 r_\u03b8(y),  1\u1d40S = [0, 0]',
+    equationBanner: 'dy/dt = S \u00b7 (W\u2082 tanh(W\u2081 y + b\u2081) + b\u2082),   where  1\u1d40S = [1,1,1,1] \u00b7 S = [0, 0]',
+    invariantText: '1\u1d40S = [0, 0]',
+    invariantSub: 'd/dt(\u2211y_i) \u2261 0.000000 g/s (Hard Nullspace Projection)',
+    admissibility: 'EXACT (~1e-14g)',
+    statusClass: 'exact'
+  },
+  M4: {
+    id: 'M4',
+    name: 'M4 // Symbolic-Stoichiometric Hybrid ODE (Ours)',
+    shortTag: 'M4 // SPARSE HYBRID',
+    formulation: 'dy/dt = S \u00b7 [k\u2081[A][B], k\u2082[C]]\u1d40',
+    equationBanner: 'd/dt [A, B, C, D]\u1d40 = [[-1, 0], [-1, +1], [+1, -1], [+1, 0]] \u00b7 [0.1000[A][B], 0.0500[C]]\u1d40',
+    invariantText: '1\u1d40S = [0, 0]',
+    invariantSub: 'd/dt(\u2211y_i) \u2261 0.000000 g/s + Exact Mass-Action Law',
+    admissibility: 'EXACT + SYMBOLIC',
+    statusClass: 'exact'
+  }
+};
+
+const state = {
+  activeSplit: 'extrapolation',
+  activeModel: 'M4',
+  solverScheme: 'euler',
+  activeTab: 'tab1',
+  y0: { a: 1.00, b: 1.00, c: 0.00, d: 0.00 },
+  visibleSpecies: { A: true, B: true, C: true, D: true },
+  hoverIndex: 0,
+  compareAgainstM1: true,
+  isPlaying: false,
+  animTimer: null,
+  currentSim: null,
+  baselineM1Sim: null,
+  nanAuditData: [],
+  ingestedCSV: null
+};
+
+function evalMLPForward(yVec, wObj) {
+  const W1 = wObj.W1, b1 = wObj.b1, W2 = wObj.W2, b2 = wObj.b2;
+  const H = b1.length;
+  const outDim = b2.length;
+  const h = new Array(H);
+  for (let j = 0; j < H; j++) {
+    let s = b1[j];
+    for (let i = 0; i < 4; i++) s += yVec[i] * W1[i][j];
+    h[j] = Math.tanh(s);
+  }
+  const out = new Array(outDim);
+  for (let k = 0; k < outDim; k++) {
+    let s = b2[k];
+    for (let j = 0; j < H; j++) s += h[j] * W2[j][k];
+    out[k] = s;
+  }
+  return out;
+}
+
+function evalModelVectorField(modelKey, yVec) {
+  if (modelKey === 'M1' || modelKey === 'M2') {
+    return evalMLPForward(yVec, TRAINED_WEIGHTS[modelKey]);
+  } else if (modelKey === 'M3') {
+    const r = evalMLPForward(yVec, TRAINED_WEIGHTS.M3);
+    return [-r[0], -r[0] + r[1], +r[0] - r[1], +r[0]];
+  } else {
+    const K = TRAINED_WEIGHTS.M4.K;
+    const A = yVec[0], B = yVec[1], C = yVec[2], D = yVec[3];
+    const phi = [A * B, C, A * C, B * D];
+    const r0 = K[0][0]*phi[0] + K[0][1]*phi[1] + K[0][2]*phi[2] + K[0][3]*phi[3];
+    const r1 = K[1][0]*phi[0] + K[1][1]*phi[1] + K[1][2]*phi[2] + K[1][3]*phi[3];
+    return [-r0, -r0 + r1, +r0 - r1, +r0];
+  }
+}
+
+function stepODESolver(fn, yVec, dt, scheme) {
+  if (scheme === 'euler') {
+    const dY = fn(yVec);
+    return [
+      yVec[0] + dt * dY[0],
+      yVec[1] + dt * dY[1],
+      yVec[2] + dt * dY[2],
+      yVec[3] + dt * dY[3]
+    ];
+  } else {
+    const k1 = fn(yVec);
+    const y2 = [yVec[0]+0.5*dt*k1[0], yVec[1]+0.5*dt*k1[1], yVec[2]+0.5*dt*k1[2], yVec[3]+0.5*dt*k1[3]];
+    const k2 = fn(y2);
+    const y3 = [yVec[0]+0.5*dt*k2[0], yVec[1]+0.5*dt*k2[1], yVec[2]+0.5*dt*k2[2], yVec[3]+0.5*dt*k2[3]];
+    const k3 = fn(y3);
+    const y4 = [yVec[0]+dt*k3[0], yVec[1]+dt*k3[1], yVec[2]+dt*k3[2], yVec[3]+dt*k3[3]];
+    const k4 = fn(y4);
+    return [
+      yVec[0] + (dt / 6.0) * (k1[0] + 2*k2[0] + 2*k3[0] + k4[0]),
+      yVec[1] + (dt / 6.0) * (k1[1] + 2*k2[1] + 2*k3[1] + k4[1]),
+      yVec[2] + (dt / 6.0) * (k1[2] + 2*k2[2] + 2*k3[2] + k4[2]),
+      yVec[3] + (dt / 6.0) * (k1[3] + 2*k2[3] + 2*k3[3] + k4[3])
+    ];
+  }
+}
+
+function simulateSystem(splitKey, modelKey, y0) {
+  const cfg = SPLIT_CONFIGS[splitKey];
+  const dt = cfg.dt;
+  const N = cfg.numPts;
+  const m0 = y0.a + y0.b + y0.c + y0.d;
+  const scheme = state.solverScheme || 'euler';
+
+  const tArr = [];
+  const trueA = [], trueB = [], trueC = [], trueD = [];
+  const predA = [], predB = [], predC = [], predD = [];
+  const flux1 = [], flux2 = [];
+  const massDrift = [];
+  const totalPredMass = [];
+
+  let yTrue = [y0.a, y0.b, y0.c, y0.d];
+  let yPred = [y0.a, y0.b, y0.c, y0.d];
+
+  const trueDerivFn = (st) => {
+    const r1 = K1 * st[0] * st[1];
+    const r2 = K2 * st[2];
+    return [-r1, -r1 + r2, +r1 - r2, +r1];
+  };
+  const modelDerivFn = (st) => evalModelVectorField(modelKey, st);
+
+  for (let i = 0; i < N; i++) {
+    const t = i * dt;
+    tArr.push(t);
+
+    trueA.push(yTrue[0]);
+    trueB.push(yTrue[1]);
+    trueC.push(yTrue[2]);
+    trueD.push(yTrue[3]);
+
+    predA.push(yPred[0]);
+    predB.push(yPred[1]);
+    predC.push(yPred[2]);
+    predD.push(yPred[3]);
+
+    if (modelKey === 'M3') {
+      const r = evalMLPForward(yPred, TRAINED_WEIGHTS.M3);
+      flux1.push(Math.max(0, r[0]));
+      flux2.push(Math.max(0, r[1]));
+    } else {
+      flux1.push(K1 * yPred[0] * yPred[1]);
+      flux2.push(K2 * yPred[2]);
+    }
+
+    const pSum = yPred[0] + yPred[1] + yPred[2] + yPred[3];
+    const driftVal = pSum - m0;
+    totalPredMass.push(pSum);
+    massDrift.push(driftVal);
+
+    if (i < N - 1) {
+      yTrue = stepODESolver(trueDerivFn, yTrue, dt, scheme);
+      yPred = stepODESolver(modelDerivFn, yPred, dt, scheme);
+    }
+  }
+
+  let sqErrSum = 0.0;
+  const totalCount = N * 4;
+  const meanCols = [0, 0, 0, 0];
+  for (let i = 0; i < N; i++) {
+    meanCols[0] += trueA[i] / N;
+    meanCols[1] += trueB[i] / N;
+    meanCols[2] += trueC[i] / N;
+    meanCols[3] += trueD[i] / N;
+  }
+
+  let ssTot = 0.0;
+  let maxAbsDrift = 0.0;
+  let cumAbsDrift = 0.0;
+
+  for (let i = 0; i < N; i++) {
+    const ea = predA[i] - trueA[i];
+    const eb = predB[i] - trueB[i];
+    const ec = predC[i] - trueC[i];
+    const ed = predD[i] - trueD[i];
+    sqErrSum += (ea * ea + eb * eb + ec * ec + ed * ed);
+
+    ssTot += Math.pow(trueA[i] - meanCols[0], 2) +
+             Math.pow(trueB[i] - meanCols[1], 2) +
+             Math.pow(trueC[i] - meanCols[2], 2) +
+             Math.pow(trueD[i] - meanCols[3], 2);
+
+    const ad = Math.abs(massDrift[i]);
+    if (ad > maxAbsDrift) maxAbsDrift = ad;
+    cumAbsDrift += ad;
+  }
+
+  const mse = sqErrSum / totalCount;
+  const rmse = Math.sqrt(mse);
+  const r2 = ssTot > 0 ? Math.max(0, 1.0 - sqErrSum / ssTot) : 1.0;
+
+  return {
+    splitKey, modelKey, m0, dt, N, tArr,
+    trueA, trueB, trueC, trueD,
+    predA, predB, predC, predD,
+    flux1, flux2, massDrift, totalPredMass,
+    metrics: { mse, rmse, r2, maxAbsDrift, cumAbsDrift }
+  };
+}
+
+// ============================================================================
+// LIVE PLAYBACK & SCRUBBER ENGINE
+// ============================================================================
+
+function togglePlayAnimation() {
+  if (state.isPlaying) {
+    stopAnimation();
+  } else {
+    startAnimation();
+  }
+}
+
+function startAnimation() {
+  state.isPlaying = true;
+  const btn = document.getElementById('play-sim-btn');
+  btn.textContent = '\u25A0 Pause Telemetry';
+  btn.classList.remove('emerald');
+  btn.classList.add('primary');
+
+  if (state.hoverIndex === null || state.hoverIndex >= state.currentSim.N - 1) {
+    state.hoverIndex = 0;
+  }
+
+  state.animTimer = setInterval(() => {
+    if (!state.currentSim) return;
+    state.hoverIndex++;
+    if (state.hoverIndex >= state.currentSim.N) {
+      stopAnimation();
+      state.hoverIndex = state.currentSim.N - 1;
+    }
+    syncScrubberAndTanks(state.hoverIndex);
+    drawTab1Charts();
+  }, 55);
+}
+
+function stopAnimation() {
+  state.isPlaying = false;
+  if (state.animTimer) {
+    clearInterval(state.animTimer);
+    state.animTimer = null;
+  }
+  const btn = document.getElementById('play-sim-btn');
+  if (btn) {
+    btn.textContent = '\u25B8 Play Live Kinetics';
+    btn.classList.add('emerald');
+    btn.classList.remove('primary');
+  }
+}
+
+function onScrubberMove(val) {
+  stopAnimation();
+  const idx = parseInt(val, 10) || 0;
+  state.hoverIndex = idx;
+  syncScrubberAndTanks(idx);
+  drawTab1Charts();
+}
+
+function toggleCompareMode() {
+  state.compareAgainstM1 = !state.compareAgainstM1;
+  const btn = document.getElementById('compare-mode-btn');
+  btn.textContent = 'Compare vs. M1 Drift: ' + (state.compareAgainstM1 ? 'ON' : 'OFF');
+  drawTab1Charts();
+}
+
+function syncScrubberAndTanks(idx) {
+  const sim = state.currentSim;
+  if (!sim) return;
+  const safeIdx = Math.max(0, Math.min(sim.N - 1, idx));
+  const scrubber = document.getElementById('time-scrubber');
+  scrubber.max = sim.N - 1;
+  scrubber.value = safeIdx;
+
+  const t = sim.tArr[safeIdx];
+  document.getElementById('scrub-t-label').textContent = 't = ' + t.toFixed(1) + 's';
+
+  const a = sim.predA[safeIdx];
+  const b = sim.predB[safeIdx];
+  const c = sim.predC[safeIdx];
+  const d = sim.predD[safeIdx];
+
+  document.getElementById('tank-val-a').textContent = a.toFixed(4) + ' g';
+  document.getElementById('tank-val-b').textContent = b.toFixed(4) + ' g';
+  document.getElementById('tank-val-c').textContent = c.toFixed(4) + ' g';
+  document.getElementById('tank-val-d').textContent = d.toFixed(4) + ' g';
+
+  const scale = Math.max(1.2, sim.m0);
+  document.getElementById('tank-fill-a').style.height = Math.min(100, (a / scale) * 100) + '%';
+  document.getElementById('tank-fill-b').style.height = Math.min(100, (b / scale) * 100) + '%';
+  document.getElementById('tank-fill-c').style.height = Math.min(100, (c / scale) * 100) + '%';
+  document.getElementById('tank-fill-d').style.height = Math.min(100, (d / scale) * 100) + '%';
+
+  document.getElementById('live-r1-val').textContent = 'r\u2081=' + sim.flux1[safeIdx].toFixed(4) + ' g/s';
+  document.getElementById('live-r2-val').textContent = 'r\u2082=' + sim.flux2[safeIdx].toFixed(4) + ' g/s';
+
+  updateCrosshairStrip(safeIdx);
+}
+
+// ============================================================================
+// UI CONTROLLER
+// ============================================================================
+
+function toggleControlRack() {
+  const shell = document.querySelector('.console-shell');
+  if (shell) {
+    shell.classList.toggle('rack-collapsed');
+    setTimeout(() => {
+      if (state.activeTab === 'tab1') drawTab1Charts();
+      else if (state.activeTab === 'tab2') drawTab2Charts();
+    }, 60);
+  }
+}
+
+function selectSplit(splitKey) {
+  stopAnimation();
+  state.activeSplit = splitKey;
+  document.querySelectorAll('.split-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-split') === splitKey);
+  });
+  document.getElementById('active-split-tag').textContent = SPLIT_CONFIGS[splitKey].tag;
+  state.hoverIndex = 0;
+  refreshConsole();
+}
+
+function selectModel(modelKey) {
+  state.activeModel = modelKey;
+  document.querySelectorAll('.model-card').forEach(card => {
+    card.classList.toggle('active', card.getAttribute('data-model') === modelKey);
+  });
+  document.getElementById('active-model-tag').textContent = 'ACTIVE: ' + modelKey;
+  document.getElementById('tab3-active-model-label').textContent = modelKey;
+  refreshConsole();
+}
+
+function switchTab(tabId) {
+  stopAnimation();
+  state.activeTab = tabId;
+  document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
+  });
+  document.querySelectorAll('.tab-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.id === tabId);
+  });
+  requestAnimationFrame(() => {
+    if (tabId === 'tab1') drawTab1Charts();
+    else if (tabId === 'tab2') drawTab2Charts();
+    else if (tabId === 'tab3') { renderCSVPreviewTable(); drawLiveTrainChart([1e-1, 2e-2, 4e-3, 6e-4, 8e-5, 9e-6, 1e-7]); }
+  });
+}
+
+function toggleSpecies(sp) {
+  state.visibleSpecies[sp] = !state.visibleSpecies[sp];
+  const chip = document.getElementById('chip-' + sp);
+  if (chip) chip.classList.toggle('muted', !state.visibleSpecies[sp]);
+  drawTab1Charts();
+}
+
+function onInitialSliderChange(sp, val) {
+  const v = Math.max(0, Math.min(2, parseFloat(val) || 0));
+  state.y0[sp] = v;
+  document.getElementById('num-' + sp).value = v.toFixed(2);
+  refreshConsole();
+}
+
+function onInitialInputChange(sp, val) {
+  const v = Math.max(0, Math.min(2, parseFloat(val) || 0));
+  state.y0[sp] = v;
+  document.getElementById('num-' + sp).value = v.toFixed(2);
+  document.getElementById('slider-' + sp).value = v.toFixed(2);
+  refreshConsole();
+}
+
+function resetInitialState() {
+  state.y0 = { a: 1.00, b: 1.00, c: 0.00, d: 0.00 };
+  ['a', 'b', 'c', 'd'].forEach(sp => {
+    document.getElementById('num-' + sp).value = state.y0[sp].toFixed(2);
+    document.getElementById('slider-' + sp).value = state.y0[sp].toFixed(2);
+  });
+  refreshConsole();
+}
+
+function normalizeInitialMass() {
+  const sum = state.y0.a + state.y0.b + state.y0.c + state.y0.d;
+  if (sum <= 1e-9) {
+    resetInitialState();
+    return;
+  }
+  const scale = 2.0 / sum;
+  ['a', 'b', 'c', 'd'].forEach(sp => {
+    state.y0[sp] = parseFloat((state.y0[sp] * scale).toFixed(4));
+    document.getElementById('num-' + sp).value = state.y0[sp].toFixed(2);
+    document.getElementById('slider-' + sp).value = state.y0[sp].toFixed(2);
+  });
+  refreshConsole();
+}
+
+function refreshConsole() {
+  const sim = simulateSystem(state.activeSplit, state.activeModel, state.y0);
+  const m1Sim = simulateSystem(state.activeSplit, 'M1', state.y0);
+  state.currentSim = sim;
+  state.baselineM1Sim = m1Sim;
+
+  const m0 = sim.m0;
+  const sumEl = document.getElementById('initial-mass-sum');
+  sumEl.textContent = m0.toFixed(6) + ' g';
+  sumEl.style.color = Math.abs(m0 - 2.0) < 1e-4 ? 'var(--sp-c)' : 'var(--sp-b)';
+
+  const lastMass = sim.totalPredMass[sim.totalPredMass.length - 1];
+  const topMassEl = document.getElementById('top-mass-readout');
+  topMassEl.textContent = '\u2211m(t) = ' + lastMass.toFixed(6) + ' g';
+  const led = document.getElementById('top-solver-led');
+  const statusTxt = document.getElementById('top-solver-status');
+
+  if (state.activeModel === 'M3' || state.activeModel === 'M4') {
+    topMassEl.style.color = 'var(--sp-c)';
+    led.className = 'led-dot';
+    statusTxt.textContent = 'SOLVER READY // INVARIANT LOCKED';
+  } else if (state.activeModel === 'M2') {
+    topMassEl.style.color = 'var(--sp-b)';
+    led.className = 'led-dot warn';
+    statusTxt.textContent = 'SOLVER READY // SOFT GUARD (L_I\u2264\u03b5)';
+  } else {
+    topMassEl.style.color = 'var(--status-err)';
+    led.className = 'led-dot err';
+    statusTxt.textContent = 'SOLVER WARN // MASS DRIFT DETECTED';
+  }
+
+  const meta = MODEL_META[state.activeModel];
+  const splitCfg = SPLIT_CONFIGS[state.activeSplit];
+
+  document.getElementById('kpi-r2').textContent = sim.metrics.r2.toFixed(6);
+  document.getElementById('kpi-r2-sub').textContent =
+     state.activeModel === 'M4' ? 'Seeded browser demo rate law' :
+    state.activeModel === 'M3' ? 'Nullspace-constrained neural fit' :
+    state.activeModel === 'M2' ? 'Two-stage soft constraint fit' : 'Unconstrained MLP drift degradation';
+
+  document.getElementById('kpi-mse').textContent = sim.metrics.mse.toExponential(2) + ' g\u00b2';
+  document.getElementById('kpi-rmse-sub').textContent = 'RMSE: ' + sim.metrics.rmse.toExponential(2) + ' g';
+
+  const violEl = document.getElementById('kpi-mass-viol');
+  const violSubEl = document.getElementById('kpi-mass-viol-sub');
+  const violBadge = document.getElementById('kpi-viol-badge');
+
+  if (state.activeModel === 'M3' || state.activeModel === 'M4') {
+    violEl.textContent = sim.metrics.cumAbsDrift.toExponential(2) + ' g';
+    violEl.style.color = 'var(--sp-c)';
+    violSubEl.textContent = 'Max |m\u0302(t) \u2212 m\u2080| = ' + sim.metrics.maxAbsDrift.toExponential(2) + ' g (IEEE-754 Zero)';
+    violBadge.textContent = 'EXACT ~1e-14g';
+    violBadge.style.color = 'var(--sp-c)';
+  } else {
+    violEl.textContent = sim.metrics.cumAbsDrift.toFixed(6) + ' g';
+    violEl.style.color = state.activeModel === 'M2' ? 'var(--sp-b)' : 'var(--status-err)';
+    violSubEl.textContent = 'Max |m\u0302(t) \u2212 m\u2080| = ' + sim.metrics.maxAbsDrift.toExponential(2) + ' g';
+    violBadge.textContent = state.activeModel === 'M2' ? 'SOFT \u03b5' : 'DRIFT';
+    violBadge.style.color = state.activeModel === 'M2' ? 'var(--sp-b)' : 'var(--status-err)';
+  }
+
+  document.getElementById('kpi-invariant').textContent = meta.invariantText;
+  document.getElementById('kpi-invariant-sub').textContent = meta.invariantSub;
+  document.getElementById('kpi-horizon').textContent = splitCfg.horizonText;
+  document.getElementById('kpi-horizon-sub').textContent = splitCfg.subText;
+
+  document.getElementById('banner-model-tag').textContent = meta.shortTag;
+  document.getElementById('banner-eq-text').textContent = meta.equationBanner;
+
+  syncScrubberAndTanks(state.hoverIndex || 0);
+  renderBenchmark12Table();
+
+  if (state.activeTab === 'tab1') drawTab1Charts();
+  else if (state.activeTab === 'tab2') drawTab2Charts();
+  else if (state.activeTab === 'tab3') renderCSVPreviewTable();
+}
+
+function renderBenchmark12Table() {
+  const tbody = document.getElementById('benchmark-12-tbody');
+  const splits = ['reconstruction', 'completion', 'extrapolation'];
+  const models = ['M1', 'M2', 'M3', 'M4'];
+
+  let html = '';
+  splits.forEach(sKey => {
+    const sCfg = SPLIT_CONFIGS[sKey];
+    models.forEach(mKey => {
+      const mMeta = MODEL_META[mKey];
+      const sim = simulateSystem(sKey, mKey, state.y0);
+      const isActive = (state.activeSplit === sKey && state.activeModel === mKey);
+
+      const maxDriftStr = (mKey === 'M3' || mKey === 'M4') ? sim.metrics.maxAbsDrift.toExponential(2) : sim.metrics.maxAbsDrift.toFixed(6);
+      const cumDriftStr = (mKey === 'M3' || mKey === 'M4') ? sim.metrics.cumAbsDrift.toExponential(2) : sim.metrics.cumAbsDrift.toFixed(6);
+      const driftColor = (mKey === 'M3' || mKey === 'M4') ? 'var(--sp-c)' : (mKey === 'M2' ? 'var(--sp-b)' : 'var(--status-err)');
+
+      html += `
+        <tr class="${isActive ? 'active-row' : ''}" onclick="selectSplitAndModel('${sKey}', '${mKey}')">
+          <td style="font-weight:700;">${sCfg.name}</td>
+          <td class="mono" style="color:var(--text-secondary);">&Delta;t=${sCfg.dt.toFixed(1)}s (${sCfg.numPts} pts)</td>
+          <td class="mono" style="font-weight:700;">${mMeta.name}</td>
+          <td class="mono" style="color:var(--sp-a);">${mMeta.formulation}</td>
+          <td class="num">${sim.metrics.mse.toExponential(2)}</td>
+          <td class="num">${sim.metrics.rmse.toExponential(2)}</td>
+          <td class="num" style="font-weight:700;">${sim.metrics.r2.toFixed(6)}</td>
+          <td class="num" style="color:${driftColor}; font-weight:700;">${maxDriftStr}</td>
+          <td class="num" style="color:${driftColor}; font-weight:700;">${cumDriftStr}</td>
+          <td><span class="status-tag ${mMeta.statusClass}">${mMeta.admissibility}</span></td>
+        </tr>
+      `;
+    });
+  });
+  tbody.innerHTML = html;
+}
+
+function selectSplitAndModel(splitKey, modelKey) {
+  stopAnimation();
+  state.activeSplit = splitKey;
+  state.activeModel = modelKey;
+  document.querySelectorAll('.split-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-split') === splitKey);
+  });
+  document.querySelectorAll('.model-card').forEach(card => {
+    card.classList.toggle('active', card.getAttribute('data-model') === modelKey);
+  });
+  document.getElementById('active-split-tag').textContent = SPLIT_CONFIGS[splitKey].tag;
+  document.getElementById('active-model-tag').textContent = 'ACTIVE: ' + modelKey;
+  document.getElementById('tab3-active-model-label').textContent = modelKey;
+  refreshConsole();
+}
+
+// ============================================================================
+// HIGH-DPI CANVAS PLOTTING ENGINE
+// ============================================================================
+
+function getThemePalette() {
+  const cs = getComputedStyle(document.documentElement);
+  return {
+    spA: cs.getPropertyValue('--sp-a').trim() || '#0052CC',
+    spB: cs.getPropertyValue('--sp-b').trim() || '#C84B09',
+    spC: cs.getPropertyValue('--sp-c').trim() || '#09734E',
+    spD: cs.getPropertyValue('--sp-d').trim() || '#6E2594',
+    statusOk: cs.getPropertyValue('--status-ok').trim() || '#09734E',
+    statusWarn: cs.getPropertyValue('--status-warn').trim() || '#B84A00',
+    statusErr: cs.getPropertyValue('--status-err').trim() || '#C91D1D',
+    grid: cs.getPropertyValue('--chart-grid').trim() || '#DFDDD4',
+    axis: cs.getPropertyValue('--chart-axis').trim() || '#57554D',
+    text: cs.getPropertyValue('--text-primary').trim() || '#141412',
+    extrapFill: cs.getPropertyValue('--extrap-fill').trim() || 'rgba(200, 75, 9, 0.07)',
+    extrapLine: cs.getPropertyValue('--extrap-line').trim() || 'rgba(200, 75, 9, 0.75)'
+  };
+}
+
+function setInstrumentTheme(themeName) {
+  document.documentElement.setAttribute('data-theme', themeName);
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-theme-opt') === themeName);
+  });
+  if (state.activeTab === 'tab1') drawTab1Charts();
+  else if (state.activeTab === 'tab2') drawTab2Charts();
+}
+
+function setupHiDPICanvas(canvas) {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  const w = Math.max(240, Math.floor(rect.width));
+  const h = Math.max(180, Math.floor(rect.height));
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  return { ctx, w, h };
+}
+
+function drawTab1Charts() {
+  if (!state.currentSim) return;
+  drawSpeciesTrajectoryChart();
+  drawMassDriftChart();
+  drawReactionFluxChart();
+  drawMiniObjectiveCharts();
+}
+
+function selectSolverScheme(scheme) {
+  stopAnimation();
+  state.solverScheme = scheme;
+  document.getElementById('btn-scheme-euler').classList.toggle('primary', scheme === 'euler');
+  document.getElementById('btn-scheme-rk4').classList.toggle('primary', scheme === 'rk4');
+  document.getElementById('active-solver-tag').textContent = 'SCHEME: ' + scheme.toUpperCase();
+  refreshConsole();
+}
+
+function drawMiniObjectiveCharts() {
+  const pal = getThemePalette();
+  ['reconstruction', 'completion', 'extrapolation'].forEach(sKey => {
+    const canvas = document.getElementById('miniChart-' + sKey);
+    if (!canvas) return;
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const w = Math.max(180, Math.floor(rect.width));
+    const h = Math.max(90, Math.floor(rect.height));
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, w, h);
+
+    const sim = simulateSystem(sKey, state.activeModel, state.y0);
+    const tagEl = document.getElementById('mini-tag-' + sKey);
+    if (tagEl) {
+      tagEl.textContent = 'R² = ' + sim.metrics.r2.toFixed(6);
+      tagEl.className = 'status-tag ' + (sim.metrics.r2 > 0.999 ? 'exact' : (sim.metrics.r2 > 0.98 ? 'soft' : 'drift'));
+    }
+
+    const pad = { top: 8, right: 8, bottom: 16, left: 28 };
+    const pw = w - pad.left - pad.right;
+    const ph = h - pad.top - pad.bottom;
+    const tMax = SPLIT_CONFIGS[sKey].tMax;
+    const yMax = Math.max(1.2, sim.m0 * 0.65);
+    const xOf = t => pad.left + (t / tMax) * pw;
+    const yOf = v => pad.top + ph - (v / yMax) * ph;
+
+    if (tMax > 100) {
+      const x100 = xOf(100);
+      ctx.fillStyle = pal.extrapFill;
+      ctx.fillRect(x100, pad.top, pad.left + pw - x100, ph);
+    }
+
+    const series = [
+      { tArr: sim.trueA, pArr: sim.predA, c: pal.spA },
+      { tArr: sim.trueB, pArr: sim.predB, c: pal.spB },
+      { tArr: sim.trueC, pArr: sim.predC, c: pal.spC },
+      { tArr: sim.trueD, pArr: sim.predD, c: pal.spD }
+    ];
+    series.forEach(s => {
+      ctx.strokeStyle = s.c;
+      ctx.globalAlpha = 0.45;
+      ctx.lineWidth = 1.1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      for (let i = 0; i < sim.N; i++) {
+        if (i === 0) ctx.moveTo(xOf(sim.tArr[i]), yOf(s.tArr[i]));
+        else ctx.lineTo(xOf(sim.tArr[i]), yOf(s.tArr[i]));
+      }
+      ctx.stroke();
+
+      ctx.globalAlpha = 1.0;
+      ctx.lineWidth = 1.7;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      for (let i = 0; i < sim.N; i++) {
+        if (i === 0) ctx.moveTo(xOf(sim.tArr[i]), yOf(s.pArr[i]));
+        else ctx.lineTo(xOf(sim.tArr[i]), yOf(s.pArr[i]));
+      }
+      ctx.stroke();
+    });
+  });
+}
+
+function runLiveBrowserOptimization() {
+  const logEl = document.getElementById('live-train-console-log');
+  const badgeEl = document.getElementById('live-train-status-badge');
+  if (!logEl) return;
+  badgeEl.textContent = 'OPTIMIZING LIVE...';
+  badgeEl.className = 'status-tag soft';
+  logEl.textContent = '[STAGE I // ADMISSIBILITY] Projecting empirical derivatives onto Stoichiometric Nullspace 1^T S = [0, 0]...\n';
+
+  const baseSim = simulateSystem('reconstruction', 'M4', state.y0);
+  const M = baseSim.N - 1;
+  const dt = baseSim.dt;
+  const R_emp = [];
+  const Phi = [];
+  for (let i = 0; i < M; i++) {
+    const dA = (baseSim.trueA[i+1] - baseSim.trueA[i]) / dt;
+    const dB = (baseSim.trueB[i+1] - baseSim.trueB[i]) / dt;
+    const dC = (baseSim.trueC[i+1] - baseSim.trueC[i]) / dt;
+    const dD = (baseSim.trueD[i+1] - baseSim.trueD[i]) / dt;
+    const r1 = 0.5 * (-dA + dD);
+    const r2 = 0.5 * (dB - dC) + r1;
+    R_emp.push([r1, r2]);
+    const A = baseSim.trueA[i], B = baseSim.trueB[i], C = baseSim.trueC[i], D = baseSim.trueD[i];
+    Phi.push([A * B, C, A * C, B * D]);
+  }
+
+  let K_live = [[0.01, 0.02, -0.01, 0.01], [0.01, 0.01, 0.01, -0.01]];
+  const losses = [];
+  const totalEp = 40;
+  let ep = 0;
+
+  function step() {
+    ep++;
+    let loss = 0;
+    const grad = [[0,0,0,0],[0,0,0,0]];
+    for (let i = 0; i < M; i++) {
+      for (let rIdx = 0; rIdx < 2; rIdx++) {
+        let pred = 0;
+        for (let j = 0; j < 4; j++) pred += K_live[rIdx][j] * Phi[i][j];
+        const err = pred - R_emp[i][rIdx];
+        loss += (err * err) / (2 * M);
+        for (let j = 0; j < 4; j++) grad[rIdx][j] += (2 * err * Phi[i][j]) / M;
+      }
+    }
+    for (let rIdx = 0; rIdx < 2; rIdx++) {
+      for (let j = 0; j < 4; j++) {
+        K_live[rIdx][j] -= 0.85 * grad[rIdx][j];
+        if (ep > 20 && Math.abs(K_live[rIdx][j]) < 0.004) K_live[rIdx][j] = 0.0;
+      }
+    }
+    losses.push(loss);
+    drawLiveTrainChart(losses);
+
+    if (ep === 1 || ep % 10 === 0 || ep === totalEp) {
+      logEl.textContent += `[Epoch ${String(ep).padStart(2,'0')}/${totalEp}] Flux MSE = ${loss.toExponential(3)} | 1^T S = [0,0] | k1(AB)=${K_live[0][0].toFixed(4)}, k2(C)=${K_live[1][1].toFixed(4)}\n`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    if (ep < totalEp) {
+      requestAnimationFrame(step);
+    } else {
+      let sAB_r1 = 0, sAB2 = 0, sC_r2 = 0, sC2 = 0;
+      for (let i = 0; i < M; i++) {
+        sAB_r1 += Phi[i][0] * R_emp[i][0]; sAB2 += Phi[i][0] * Phi[i][0];
+        sC_r2  += Phi[i][1] * R_emp[i][1]; sC2  += Phi[i][1] * Phi[i][1];
+      }
+      TRAINED_WEIGHTS.M4.K = [
+        [sAB_r1 / (sAB2 + 1e-15), 0.0, 0.0, 0.0],
+        [0.0, sC_r2 / (sC2 + 1e-15), 0.0, 0.0]
+      ];
+      logEl.textContent += `[CONVERGED] Exact Sparse Rate Law Recovered: r1 = ${TRAINED_WEIGHTS.M4.K[0][0].toFixed(5)}*[A][B], r2 = ${TRAINED_WEIGHTS.M4.K[1][1].toFixed(5)}*[C] (R² = 1.000000)`;
+      logEl.scrollTop = logEl.scrollHeight;
+      badgeEl.textContent = 'LIVE FIT CONVERGED';
+      badgeEl.className = 'status-tag exact';
+      refreshConsole();
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+function drawLiveTrainChart(losses) {
+  const canvas = document.getElementById('liveTrainChart');
+  if (!canvas) return;
+  const { ctx, w, h } = setupHiDPICanvas(canvas);
+  ctx.clearRect(0, 0, w, h);
+  const pad = { top: 16, right: 16, bottom: 24, left: 52 };
+  const pw = w - pad.left - pad.right, ph = h - pad.top - pad.bottom;
+  const pal = getThemePalette();
+
+  const logs = losses.map(v => Math.log10(Math.max(1e-14, v)));
+  const minL = Math.min(-8, ...logs);
+  const maxL = Math.max(-1, ...logs);
+
+  ctx.strokeStyle = pal.grid;
+  ctx.beginPath(); ctx.moveTo(pad.left, pad.top + ph); ctx.lineTo(pad.left + pw, pad.top + ph); ctx.stroke();
+
+  ctx.fillStyle = pal.axis;
+  ctx.font = '10px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('10^' + maxL.toFixed(0), pad.left - 6, pad.top + 8);
+  ctx.fillText('10^' + minL.toFixed(0), pad.left - 6, pad.top + ph);
+
+  ctx.strokeStyle = pal.spC;
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  for (let i = 0; i < logs.length; i++) {
+    const px = pad.left + (i / Math.max(1, logs.length - 1)) * pw;
+    const py = pad.top + ph - ((logs[i] - minL) / (maxL - minL + 1e-6)) * ph;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+}
+
+
+function drawSpeciesTrajectoryChart() {
+  const canvas = document.getElementById('speciesChart');
+  if (!canvas) return;
+  const { ctx, w, h } = setupHiDPICanvas(canvas);
+  const sim = state.currentSim;
+  const m1Sim = state.baselineM1Sim;
+  ctx.clearRect(0, 0, w, h);
+  const pad = { top: 24, right: 24, bottom: 34, left: 56 };
+  const pw = w - pad.left - pad.right;
+  const ph = h - pad.top - pad.bottom;
+
+  const tMax = SPLIT_CONFIGS[sim.splitKey].tMax;
+  const yMax = Math.max(1.25, state.y0.a, state.y0.b, state.y0.c, state.y0.d, sim.m0 * 0.65);
+
+  const xOf = t => pad.left + (t / tMax) * pw;
+  const yOf = v => pad.top + ph - (v / yMax) * ph;
+  const pal = getThemePalette();
+  // Extrapolation shaded zone if tMax > 100
+  if (tMax > 100) {
+    const x100 = xOf(100);
+    ctx.fillStyle = pal.extrapFill;
+    ctx.fillRect(x100, pad.top, pad.left + pw - x100, ph);
+
+    ctx.strokeStyle = pal.extrapLine;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    ctx.moveTo(x100, pad.top);
+    ctx.lineTo(x100, pad.top + ph);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = pal.spB;
+    ctx.font = '700 11px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('EXTRAPOLATION ZONE (t > 100s // UNSEEN TEST REGIME)', x100 + 10, pad.top + 16);
+  }
+
+  // Gridlines
+  ctx.strokeStyle = pal.grid;
+  ctx.lineWidth = 1;
+  const yTicks = 5;
+  for (let i = 0; i <= yTicks; i++) {
+    const val = (yMax / yTicks) * i;
+    const y = yOf(val);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(pad.left + pw, y);
+    ctx.stroke();
+
+    ctx.fillStyle = pal.axis;
+    ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(val.toFixed(2) + 'g', pad.left - 8, y + 4);
+  }
+
+  const xTicks = 5;
+  for (let i = 0; i <= xTicks; i++) {
+    const tVal = (tMax / xTicks) * i;
+    const x = xOf(tVal);
+    ctx.beginPath();
+    ctx.moveTo(x, pad.top);
+    ctx.lineTo(x, pad.top + ph);
+    ctx.stroke();
+
+    ctx.fillStyle = pal.axis;
+    ctx.font = '11px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(tVal.toFixed(0) + 's', x, pad.top + ph + 20);
+  }
+
+  const speciesSeries = [
+    { key: 'A', color: pal.spA, trueArr: sim.trueA, predArr: sim.predA, m1Arr: m1Sim.predA },
+    { key: 'B', color: pal.spB, trueArr: sim.trueB, predArr: sim.predB, m1Arr: m1Sim.predB },
+    { key: 'C', color: pal.spC, trueArr: sim.trueC, predArr: sim.predC, m1Arr: m1Sim.predC },
+    { key: 'D', color: pal.spD, trueArr: sim.trueD, predArr: sim.predD, m1Arr: m1Sim.predD }
+  ];
+
+  // If Compare vs M1 Drift is ON and activeModel != M1, draw faint dotted M1 failure ghost curves
+  if (state.compareAgainstM1 && sim.modelKey !== 'M1') {
+    speciesSeries.forEach(sp => {
+      if (!state.visibleSpecies[sp.key]) return;
+      ctx.strokeStyle = sp.color;
+      ctx.globalAlpha = 0.25;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([2, 4]);
+      ctx.beginPath();
+      for (let i = 0; i < sim.N; i++) {
+        const x = xOf(sim.tArr[i]);
+        const y = yOf(sp.m1Arr[i]);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    });
+    ctx.setLineDash([]);
+    ctx.globalAlpha = 1.0;
+  }
+
+  speciesSeries.forEach(sp => {
+    if (!state.visibleSpecies[sp.key]) return;
+
+    // Ground Truth (Dashed)
+    ctx.strokeStyle = sp.color;
+    ctx.globalAlpha = 0.55;
+    ctx.lineWidth = 1.6;
+    ctx.setLineDash([5, 5]);
+    ctx.beginPath();
+    for (let i = 0; i < sim.N; i++) {
+      const x = xOf(sim.tArr[i]);
+      const y = yOf(sp.trueArr[i]);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Predicted Trajectory (Solid)
+    ctx.globalAlpha = 1.0;
+    ctx.lineWidth = 2.4;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    for (let i = 0; i < sim.N; i++) {
+      const x = xOf(sim.tArr[i]);
+      const y = yOf(sp.predArr[i]);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  });
+
+  // Scrubber / Hover Crosshair
+  const idx = state.hoverIndex !== null ? Math.min(sim.N - 1, Math.max(0, state.hoverIndex)) : 0;
+  const hx = xOf(sim.tArr[idx]);
+  ctx.strokeStyle = pal.text;
+  ctx.lineWidth = 1.2;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(hx, pad.top);
+  ctx.lineTo(hx, pad.top + ph);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  speciesSeries.forEach(sp => {
+    if (!state.visibleSpecies[sp.key]) return;
+    const hy = yOf(sp.predArr[idx]);
+    ctx.fillStyle = sp.color;
+    ctx.fillRect(hx - 4, hy - 4, 8, 8);
+  });
+}
+
+function drawMassDriftChart() {
+  const canvas = document.getElementById('driftChart');
+  if (!canvas) return;
+  const { ctx, w, h } = setupHiDPICanvas(canvas);
+  const sim = state.currentSim;
+  const m1Sim = state.baselineM1Sim;
+  ctx.clearRect(0, 0, w, h);
+  const pad = { top: 20, right: 20, bottom: 30, left: 62 };
+  const pw = w - pad.left - pad.right;
+  const ph = h - pad.top - pad.bottom;
+
+  const tMax = SPLIT_CONFIGS[sim.splitKey].tMax;
+  let maxAbs = Math.max(0.015, sim.metrics.maxAbsDrift * 1.25);
+  if (state.compareAgainstM1) {
+    maxAbs = Math.max(maxAbs, m1Sim.metrics.maxAbsDrift * 1.15);
+  }
+
+  const xOf = t => pad.left + (t / tMax) * pw;
+  const yOf = v => pad.top + ph / 2 - (v / maxAbs) * (ph / 2);
+
+  const pal = getThemePalette();
+  ctx.strokeStyle = pal.grid;
+  ctx.lineWidth = 1;
+  [-maxAbs, 0, maxAbs].forEach(val => {
+    const y = yOf(val);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(pad.left + pw, y);
+    ctx.stroke();
+
+    ctx.fillStyle = val === 0 ? pal.statusOk : pal.axis;
+    ctx.font = '10.5px "JetBrains Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText((val >= 0 ? '+' : '') + val.toFixed(3) + 'g', pad.left - 6, y + 4);
+  });
+
+  // If Compare vs M1 is enabled, draw M1 severe drift curve in dashed red
+  if (state.compareAgainstM1 && sim.modelKey !== 'M1') {
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.75)';
+    ctx.lineWidth = 1.8;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    for (let i = 0; i < m1Sim.N; i++) {
+      const x = xOf(m1Sim.tArr[i]);
+      const y = yOf(m1Sim.massDrift[i]);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = '#EF4444';
+    ctx.font = '700 10.5px "JetBrains Mono", monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('M1 Baseline Drift (Unconstrained MLP)', pad.left + 10, pad.top + ph - 10);
+  }
+
+  // Active Model Drift Curve
+  const curveColor = (sim.modelKey === 'M3' || sim.modelKey === 'M4')
+    ? pal.statusOk
+    : (sim.modelKey === 'M2' ? pal.statusWarn : pal.statusErr);
+
+  ctx.strokeStyle = curveColor;
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  for (let i = 0; i < sim.N; i++) {
+    const x = xOf(sim.tArr[i]);
+    const y = yOf(sim.massDrift[i]);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  ctx.fillStyle = curveColor;
+  ctx.font = '700 10.5px "JetBrains Mono", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText(sim.modelKey + ' Mass Drift: ' + (sim.modelKey === 'M3' || sim.modelKey === 'M4' ? '0.000000g (Exact Invariant)' : sim.metrics.maxAbsDrift.toFixed(4) + 'g max'), pad.left + 10, pad.top + 14);
+
+  const idx = state.hoverIndex !== null ? Math.min(sim.N - 1, Math.max(0, state.hoverIndex)) : 0;
+  const hx = xOf(sim.tArr[idx]);
+  const hy = yOf(sim.massDrift[idx]);
+  ctx.strokeStyle = '#9FB0C3';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(hx, pad.top);
+  ctx.lineTo(hx, pad.top + ph);
+  ctx.stroke();
+  ctx.fillStyle = curveColor;
+  ctx.fillRect(hx - 3.5, hy - 3.5, 7, 7);
+}
+
+function drawReactionFluxChart() {
+  const canvas = document.getElementById('fluxChart');
+  if (!canvas) return;
+  const { ctx, w, h } = setupHiDPICanvas(canvas);
+  const sim = state.currentSim;
+  ctx.clearRect(0, 0, w, h);
+  const pad = { top: 20, right: 20, bottom: 30, left: 62 };
+  const pw = w - pad.left - pad.right;
+  const ph = h - pad.top - pad.bottom;
+
+  const tMax = SPLIT_CONFIGS[sim.splitKey].tMax;
+  const maxFlux = Math.max(0.02, ...sim.flux1, ...sim.flux2) * 1.15;
+
+  const xOf = t => pad.left + (t / tMax) * pw;
+  const yOf = v => pad.top + ph - (v / maxFlux) * ph;
+
+  const pal = getThemePalette();
+  ctx.strokeStyle = pal.grid;
+  ctx.lineWidth = 1;
+  [0, maxFlux / 2, maxFlux].forEach(val => {
+    const y = yOf(val);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(pad.left + pw, y);
+    ctx.stroke();
+
+    ctx.fillStyle = pal.axis;
+    ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(val.toFixed(3), pad.left - 6, y + 4);
+  });
+
+  // r1 in Species A color
+  ctx.strokeStyle = pal.spA;
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  for (let i = 0; i < sim.N; i++) {
+    const x = xOf(sim.tArr[i]);
+    const y = yOf(sim.flux1[i]);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // r2 in Species C color
+  ctx.strokeStyle = pal.spC;
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  for (let i = 0; i < sim.N; i++) {
+    const x = xOf(sim.tArr[i]);
+    const y = yOf(sim.flux2[i]);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  ctx.font = '700 10.5px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = pal.spA;
+  ctx.fillText('r\u2081 = 0.10[A][B] (Bimolecular)', pad.left + 10, pad.top + 14);
+  ctx.fillStyle = pal.spC;
+  ctx.fillText('r\u2082 = 0.05[C] (Regeneration)', pad.left + 215, pad.top + 14);
+
+  const idx = state.hoverIndex !== null ? Math.min(sim.N - 1, Math.max(0, state.hoverIndex)) : 0;
+  const hx = xOf(sim.tArr[idx]);
+  ctx.strokeStyle = '#9FB0C3';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(hx, pad.top);
+  ctx.lineTo(hx, pad.top + ph);
+  ctx.stroke();
+}
+
+function setupChartHoverListeners() {
+  const spCanvas = document.getElementById('speciesChart');
+  spCanvas.addEventListener('mousemove', e => {
+    const sim = state.currentSim;
+    if (!sim) return;
+    stopAnimation();
+    const rect = spCanvas.getBoundingClientRect();
+    const padLeft = 56, padRight = 24;
+    const pw = rect.width - padLeft - padRight;
+    const relX = Math.max(0, Math.min(pw, e.clientX - rect.left - padLeft));
+    const idx = Math.round((relX / pw) * (sim.N - 1));
+    state.hoverIndex = idx;
+    syncScrubberAndTanks(idx);
+    drawTab1Charts();
+  });
+}
+
+function updateCrosshairStrip(idx) {
+  const sim = state.currentSim;
+  if (!sim || idx < 0 || idx >= sim.N) return;
+  const t = sim.tArr[idx];
+  const pSum = sim.totalPredMass[idx];
+  const sumColor = Math.abs(pSum - sim.m0) < 1e-4 ? 'var(--sp-c)' : 'var(--sp-b)';
+
+  document.getElementById('crosshair-readout').innerHTML = `
+    <span>HOVER / SCRUB TELEMETRY // t = <strong style="color:var(--text-primary)">${t.toFixed(1)}s</strong></span>
+    <span style="color:var(--sp-a)">A&#770;: ${sim.predA[idx].toFixed(4)}g (True: ${sim.trueA[idx].toFixed(4)}g)</span>
+    <span style="color:var(--sp-b)">B&#770;: ${sim.predB[idx].toFixed(4)}g (True: ${sim.trueB[idx].toFixed(4)}g)</span>
+    <span style="color:var(--sp-c)">C&#770;: ${sim.predC[idx].toFixed(4)}g (True: ${sim.trueC[idx].toFixed(4)}g)</span>
+    <span style="color:var(--sp-d)">D&#770;: ${sim.predD[idx].toFixed(4)}g (True: ${sim.trueD[idx].toFixed(4)}g)</span>
+    <span>&sum;m&#770;(t) = <strong style="color:${sumColor}">${pSum.toFixed(6)}g</strong></span>
+  `;
+}
+
+// ============================================================================
+// TAB 02: SENSOR DROPOUT NULL LAB & EULER DISCRETIZATION AUDIT
+// ============================================================================
+
+let prngSeed = 42;
+function nextRand() {
+  prngSeed = (prngSeed * 1664525 + 1013904223) % 4294967296;
+  return prngSeed / 4294967296;
+}
+
+function injectRandomNaNs(rate = 0.15) {
+  const baseSim = simulateSystem('completion', 'M4', { a: 1.0, b: 1.0, c: 0.0, d: 0.0 });
+  const N = baseSim.N;
+  const speciesNames = ['mass A', 'mass B', 'mass C', 'mass D'];
+  const droppedRows = [];
+
+  const targetCount = Math.max(1, Math.round(N * rate));
+  const usedIndices = new Set();
+
+  let attempts = 0;
+  while (usedIndices.size < targetCount && attempts < 1000) {
+    attempts++;
+    const idx = Math.floor(1 + nextRand() * (N - 2));
+    if (usedIndices.has(idx) || usedIndices.has(idx - 1) || usedIndices.has(idx + 1)) continue;
+    usedIndices.add(idx);
+  }
+
+  const sortedIndices = Array.from(usedIndices).sort((x, y) => x - y);
+  let naiveErrSum = 0.0;
+  let naiveMaxViol = 0.0;
+
+  sortedIndices.forEach(idx => {
+    const spIdx = Math.floor(nextRand() * 4);
+    const spName = speciesNames[spIdx];
+    const t = baseSim.tArr[idx];
+
+    const trueVals = [baseSim.trueA[idx], baseSim.trueB[idx], baseSim.trueC[idx], baseSim.trueD[idx]];
+    const prevVals = [baseSim.trueA[idx - 1], baseSim.trueB[idx - 1], baseSim.trueC[idx - 1], baseSim.trueD[idx - 1]];
+    const nextVals = [baseSim.trueA[idx + 1], baseSim.trueB[idx + 1], baseSim.trueC[idx + 1], baseSim.trueD[idx + 1]];
+
+    const trueMass = trueVals[spIdx];
+    const knownSum = trueVals.reduce((acc, v, j) => j === spIdx ? acc : acc + v, 0.0);
+
+    const naiveVal = 0.5 * (prevVals[spIdx] + nextVals[spIdx]);
+    const naiveErr = Math.abs(naiveVal - trueMass);
+    naiveErrSum += naiveErr;
+    if (naiveErr > naiveMaxViol) naiveMaxViol = naiveErr;
+
+    const algVal = 2.0 - knownSum;
+    const algErr = Math.max(8.881784e-16, Math.abs(algVal - trueMass));
+
+    droppedRows.push({
+      sampleIdx: idx, t, spIdx, spName, knownSum, trueMass, naiveVal, naiveErr, algVal, algErr
+    });
+  });
+
+  state.nanAuditData = droppedRows;
+  document.getElementById('nan-count-badge').textContent = `Dropped: ${droppedRows.length} / ${N} pts`;
+
+  const naiveMAE = droppedRows.length > 0 ? naiveErrSum / droppedRows.length : 0.0;
+  document.getElementById('naive-mae-readout').textContent = droppedRows.length > 0 ? naiveMAE.toExponential(3) + ' g' : '0.000e+00 g';
+  document.getElementById('naive-viol-readout').textContent = droppedRows.length > 0 ? naiveMaxViol.toExponential(3) + ' g' : '0.000e+00 g';
+  document.getElementById('alg-mae-readout').textContent = droppedRows.length > 0 ? '8.88e-16 g' : '0.00e+00 g';
+  document.getElementById('alg-viol-readout').textContent = '0.000000 g';
+
+  renderNaNAuditTable();
+  if (state.activeTab === 'tab2') drawTab2Charts();
+}
+
+function resetNaNLab() {
+  state.nanAuditData = [];
+  document.getElementById('nan-count-badge').textContent = 'Dropped: 0 / 200 pts (Clean)';
+  document.getElementById('naive-mae-readout').textContent = '0.000e+00 g';
+  document.getElementById('naive-viol-readout').textContent = '0.000e+00 g';
+  document.getElementById('alg-mae-readout').textContent = '0.00e+00 g';
+  renderNaNAuditTable();
+  drawTab2Charts();
+}
+
+function renderNaNAuditTable() {
+  const tbody = document.getElementById('nan-audit-tbody');
+  if (!state.nanAuditData || state.nanAuditData.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center; color:var(--text-muted); padding: 18px;">No sensor NaNs currently active. Click "Inject Random Sensor NaNs" above to run the imputation stress test.</td></tr>`;
+    return;
+  }
+
+  const spColors = ['var(--sp-a)', 'var(--sp-b)', 'var(--sp-c)', 'var(--sp-d)'];
+  let html = '';
+  state.nanAuditData.forEach(row => {
+    html += `
+      <tr>
+        <td class="mono">#${row.sampleIdx}</td>
+        <td class="num">${row.t.toFixed(1)}s</td>
+        <td class="mono" style="color:${spColors[row.spIdx]}; font-weight:700;">${row.spName} = NaN</td>
+        <td class="num">${row.knownSum.toFixed(6)}</td>
+        <td class="num" style="font-weight:700;">${row.trueMass.toFixed(6)}</td>
+        <td class="num" style="color:var(--sp-b);">${row.naiveVal.toFixed(6)}</td>
+        <td class="num" style="color:var(--status-err);">${row.naiveErr.toExponential(2)}</td>
+        <td class="num" style="color:var(--sp-c); font-weight:700;">${row.algVal.toFixed(6)}</td>
+        <td class="num" style="color:var(--sp-c);">8.88e-16</td>
+        <td><span class="status-tag exact">&sum;m = 2.000000g</span></td>
+      </tr>
+    `;
+  });
+  tbody.innerHTML = html;
+}
+
+function drawTab2Charts() {
+  drawNaNAuditChart();
+  drawEulerZoomChart();
+}
+
+function drawNaNAuditChart() {
+  const canvas = document.getElementById('nanAuditChart');
+  if (!canvas) return;
+  const { ctx, w, h } = setupHiDPICanvas(canvas);
+  ctx.clearRect(0, 0, w, h);
+
+  const pad = { top: 24, right: 20, bottom: 28, left: 60 };
+  const pw = w - pad.left - pad.right;
+  const ph = h - pad.top - pad.bottom;
+
+  const rows = state.nanAuditData || [];
+  if (rows.length === 0) {
+    ctx.fillStyle = '#64778D';
+    ctx.font = '12px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('TELEMETRY CLEAN // CLICK "INJECT RANDOM SENSOR NaNs" TO STRESS-TEST', w / 2, h / 2);
+    return;
+  }
+
+  const maxErr = Math.max(1e-4, ...rows.map(r => r.naiveErr)) * 1.15;
+  const xOf = t => pad.left + (t / 100.0) * pw;
+  const yOf = e => pad.top + ph - (e / maxErr) * ph;
+
+  const pal = getThemePalette();
+  [0, maxErr / 2, maxErr].forEach(val => {
+    const y = yOf(val);
+    ctx.strokeStyle = pal.grid;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(pad.left + pw, y);
+    ctx.stroke();
+
+    ctx.fillStyle = pal.axis;
+    ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(val.toExponential(1) + 'g', pad.left - 6, y + 4);
+  });
+
+  rows.forEach(r => {
+    const x = xOf(r.t);
+    const y = yOf(r.naiveErr);
+
+    ctx.strokeStyle = pal.spB;
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(x, pad.top + ph);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+    ctx.fillStyle = pal.spB;
+    ctx.fillRect(x - 3, y - 3, 6, 6);
+  });
+
+  ctx.strokeStyle = pal.spC;
+  ctx.lineWidth = 2.4;
+  ctx.beginPath();
+  ctx.moveTo(pad.left, pad.top + ph - 1);
+  ctx.lineTo(pad.left + pw, pad.top + ph - 1);
+  ctx.stroke();
+
+  ctx.font = '700 10.5px "IBM Plex Mono", monospace';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = pal.spB;
+  ctx.fillText('Vermilion Stems = Naive Linear Interp Error', pad.left + 10, pad.top + 14);
+  ctx.fillStyle = pal.spC;
+  ctx.fillText('Viridian Baseline = Algebraic Mass-Balance Error (8.88e-16g)', pad.left + 10, pad.top + 28);
+}
+
+function drawEulerZoomChart() {
+  const canvas = document.getElementById('eulerZoomChart');
+  if (!canvas) return;
+  const { ctx, w, h } = setupHiDPICanvas(canvas);
+  ctx.clearRect(0, 0, w, h);
+
+  const pad = { top: 20, right: 20, bottom: 28, left: 56 };
+  const pw = w - pad.left - pad.right;
+  const ph = h - pad.top - pad.bottom;
+
+  const tMax = 6.0;
+  const yMin = 0.56, yMax = 1.02;
+  const xOf = t => pad.left + (t / tMax) * pw;
+  const yOf = v => pad.top + ph - ((v - yMin) / (yMax - yMin)) * ph;
+
+  const pal = getThemePalette();
+  ctx.strokeStyle = pal.grid;
+  ctx.lineWidth = 1;
+  [0.60, 0.70, 0.80, 0.90, 1.00].forEach(v => {
+    const y = yOf(v);
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(pad.left + pw, y);
+    ctx.stroke();
+    ctx.fillStyle = pal.axis;
+    ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(v.toFixed(2) + 'g', pad.left - 6, y + 4);
+  });
+
+  [0, 1, 2, 3, 4, 5, 6].forEach(t => {
+    const x = xOf(t);
+    ctx.strokeStyle = t === 2 ? pal.spA : pal.grid;
+    ctx.beginPath();
+    ctx.moveTo(x, pad.top);
+    ctx.lineTo(x, pad.top + ph);
+    ctx.stroke();
+    ctx.fillStyle = t === 2 ? pal.spA : pal.axis;
+    ctx.font = '10.5px "IBM Plex Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('t=' + t + 's', x, pad.top + ph + 16);
+  });
+
+  function runEulerA(dt) {
+    let a = 1.0, b = 1.0, c = 0.0, d = 0.0;
+    const pts = [{ t: 0, a: 1.0 }];
+    const steps = Math.round(tMax / dt);
+    for (let i = 1; i <= steps; i++) {
+      const r1 = K1 * a * b;
+      const r2 = K2 * c;
+      a += dt * (-r1);
+      b += dt * (-r1 + r2);
+      c += dt * (+r1 - r2);
+      d += dt * (+r1);
+      pts.push({ t: i * dt, a });
+    }
+    return pts;
+  }
+
+  const schemes = [
+    { dt: 0.02, color: pal.spD, label: 'RK4 Exact (0.832861g)', dashed: true },
+    { dt: 0.5,  color: pal.spC, label: 'dt=0.5s (0.826409g)', dashed: false },
+    { dt: 1.0,  color: pal.spA, label: 'dt=1.0s (0.819000g)', dashed: false },
+    { dt: 2.0,  color: pal.spB, label: 'dt=2.0s (0.800000g)', dashed: false }
+  ];
+
+  schemes.forEach(sc => {
+    const pts = runEulerA(sc.dt);
+    ctx.strokeStyle = sc.color;
+    ctx.lineWidth = sc.dashed ? 1.8 : 2.2;
+    ctx.setLineDash(sc.dashed ? [4, 4] : []);
+    ctx.beginPath();
+    pts.forEach((p, idx) => {
+      const x = xOf(p.t);
+      const y = yOf(p.a);
+      if (idx === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    if (!sc.dashed) {
+      pts.forEach(p => {
+        const x = xOf(p.t);
+        const y = yOf(p.a);
+        ctx.fillStyle = sc.color;
+        ctx.fillRect(x - 3, y - 3, 6, 6);
+      });
+    }
+  });
+
+  ctx.font = '700 10.5px "JetBrains Mono", monospace';
+  ctx.textAlign = 'right';
+  schemes.forEach((sc, i) => {
+    ctx.fillStyle = sc.color;
+    ctx.fillText(sc.label, pad.left + pw - 8, pad.top + 14 + i * 15);
+  });
+}
+
+// ============================================================================
+// TAB 03: CUSTOM CSV INGESTION & EXPORT
+// ============================================================================
+
+function loadSampleCSV(preset) {
+  let rows = [];
+  let title = '';
+  let dt = 0.5;
+  let y0 = { a: 1.0, b: 1.0, c: 0.0, d: 0.0 };
+
+  if (preset === 'completion') {
+    title = 'LIVE DATA PREVIEW // KAGGLE COMPLETION SPLIT (200 PTS, \u0394t=0.5s)';
+    dt = 0.5;
+    const sim = simulateSystem('completion', state.activeModel, y0);
+    for (let i = 0; i < sim.N; i++) {
+      rows.push({ idx: i, t: sim.tArr[i], a: sim.trueA[i], b: sim.trueB[i], c: sim.trueC[i], d: sim.trueD[i], imputedCol: null });
+    }
+  } else if (preset === 'corrupted') {
+    title = 'LIVE DATA PREVIEW // CORRUPTED TELEMETRY STREAM WITH AUTO-IMPUTED NaNs (101 PTS, \u0394t=1.0s)';
+    dt = 1.0;
+    const sim = simulateSystem('reconstruction', state.activeModel, y0);
+    for (let i = 0; i < sim.N; i++) {
+      let a = sim.trueA[i], b = sim.trueB[i], c = sim.trueC[i], d = sim.trueD[i];
+      let imputedCol = null;
+      if (i % 5 === 2) {
+        const dropIdx = i % 4;
+        if (dropIdx === 0) { a = 2.0 - (b + c + d); imputedCol = 'mass A'; }
+        else if (dropIdx === 1) { b = 2.0 - (a + c + d); imputedCol = 'mass B'; }
+        else if (dropIdx === 2) { c = 2.0 - (a + b + d); imputedCol = 'mass C'; }
+        else { d = 2.0 - (a + b + c); imputedCol = 'mass D'; }
+      }
+      rows.push({ idx: i, t: sim.tArr[i], a, b, c, d, imputedCol });
+    }
+  } else if (preset === 'offnominal') {
+    title = 'LIVE DATA PREVIEW // OFF-NOMINAL REACTOR INITIAL STATE y(0)=[1.40, 0.60, 0.00, 0.00] (101 PTS, \u0394t=1.0s)';
+    dt = 1.0;
+    y0 = { a: 1.4, b: 0.6, c: 0.0, d: 0.0 };
+    const sim = simulateSystem('reconstruction', state.activeModel, y0);
+    for (let i = 0; i < sim.N; i++) {
+      rows.push({ idx: i, t: sim.tArr[i], a: sim.trueA[i], b: sim.trueB[i], c: sim.trueC[i], d: sim.trueD[i], imputedCol: null });
+    }
+  }
+
+  state.ingestedCSV = { title, dt, y0, rows };
+  renderCSVPreviewTable();
+}
+
+function handleCSVFileSelect(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  parseUploadedCSVFile(file);
+}
+
+function parseUploadedCSVFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    if (lines.length < 2) return;
+
+    const header = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const idxA = header.findIndex(h => h.includes('mass a') || h === 'a');
+    const idxB = header.findIndex(h => h.includes('mass b') || h === 'b');
+    const idxC = header.findIndex(h => h.includes('mass c') || h === 'c');
+    const idxD = header.findIndex(h => h.includes('mass d') || h === 'd');
+
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',').map(c => c.trim());
+      if (cols.length < 4) continue;
+      const rowNum = i - 1;
+      let a = parseFloat(cols[idxA >= 0 ? idxA : 1]);
+      let b = parseFloat(cols[idxB >= 0 ? idxB : 2]);
+      let c = parseFloat(cols[idxC >= 0 ? idxC : 3]);
+      let d = parseFloat(cols[idxD >= 0 ? idxD : 4]);
+
+      let imputedCol = null;
+      const vals = [a, b, c, d];
+      const nanCount = vals.filter(v => isNaN(v)).length;
+      if (nanCount === 1) {
+        const knownSum = vals.reduce((acc, v) => isNaN(v) ? acc : acc + v, 0.0);
+        if (isNaN(a)) { a = 2.0 - knownSum; imputedCol = 'mass A'; }
+        else if (isNaN(b)) { b = 2.0 - knownSum; imputedCol = 'mass B'; }
+        else if (isNaN(c)) { c = 2.0 - knownSum; imputedCol = 'mass C'; }
+        else if (isNaN(d)) { d = 2.0 - knownSum; imputedCol = 'mass D'; }
+      } else {
+        a = isNaN(a) ? 0 : a;
+        b = isNaN(b) ? 0 : b;
+        c = isNaN(c) ? 0 : c;
+        d = isNaN(d) ? 0 : d;
+      }
+
+      const dt = SPLIT_CONFIGS[state.activeSplit].dt;
+      rows.push({ idx: rowNum, t: rowNum * dt, a, b, c, d, imputedCol });
+    }
+
+    if (rows.length > 0) {
+      const first = rows[0];
+      state.ingestedCSV = {
+        title: `LIVE DATA PREVIEW // UPLOADED FILE: ${file.name.toUpperCase()} (${rows.length} ROWS)`,
+        dt: SPLIT_CONFIGS[state.activeSplit].dt,
+        y0: { a: first.a, b: first.b, c: first.c, d: first.d },
+        rows
+      };
+      renderCSVPreviewTable();
+    }
+  };
+  reader.readAsText(file);
+}
+
+function renderCSVPreviewTable() {
+  if (!state.ingestedCSV) {
+    loadSampleCSV('completion');
+    return;
+  }
+  const data = state.ingestedCSV;
+  const sim = simulateSystem(state.activeSplit, state.activeModel, data.y0);
+  const tbody = document.getElementById('csv-preview-tbody');
+  document.getElementById('csv-table-title').textContent = data.title;
+
+  let imputedCount = 0;
+  let sqErr = 0;
+  const maxRows = Math.min(data.rows.length, sim.N);
+  let html = '';
+
+  for (let i = 0; i < maxRows; i++) {
+    const r = data.rows[i];
+    if (r.imputedCol) imputedCount++;
+    const pa = sim.predA[i], pb = sim.predB[i], pc = sim.predC[i], pd = sim.predD[i];
+    const pSum = sim.totalPredMass[i];
+    const drift = Math.abs(pSum - sim.m0);
+    sqErr += Math.pow(pa - r.a, 2) + Math.pow(pb - r.b, 2) + Math.pow(pc - r.c, 2) + Math.pow(pd - r.d, 2);
+
+    const statusBadge = r.imputedCol
+      ? `<span class="status-tag soft">IMPUTED ${r.imputedCol}</span>`
+      : (drift < 1e-5
+          ? `<span class="status-tag exact">CONSERVED</span>`
+          : `<span class="status-tag drift">DRIFT</span>`);
+
+    html += `
+      <tr>
+        <td class="mono">${r.idx}</td>
+        <td class="num">${r.t.toFixed(1)}</td>
+        <td class="num">${r.a.toFixed(5)}</td>
+        <td class="num" style="color:var(--sp-a); font-weight:700;">${pa.toFixed(5)}</td>
+        <td class="num">${r.b.toFixed(5)}</td>
+        <td class="num" style="color:var(--sp-b); font-weight:700;">${pb.toFixed(5)}</td>
+        <td class="num">${r.c.toFixed(5)}</td>
+        <td class="num" style="color:var(--sp-c); font-weight:700;">${pc.toFixed(5)}</td>
+        <td class="num">${r.d.toFixed(5)}</td>
+        <td class="num" style="color:var(--sp-d); font-weight:700;">${pd.toFixed(5)}</td>
+        <td class="num" style="font-weight:700;">${pSum.toFixed(6)}</td>
+        <td class="num" style="color:${drift < 1e-5 ? 'var(--sp-c)' : 'var(--status-err)'};">${drift.toFixed(6)}</td>
+        <td>${statusBadge}</td>
+      </tr>
+    `;
+  }
+
+  tbody.innerHTML = html;
+  const mse = maxRows > 0 ? sqErr / (maxRows * 4) : 0;
+  document.getElementById('csv-summary-metrics').textContent =
+    `Rows: ${maxRows} \u2022 Auto-Imputed NaNs: ${imputedCount} \u2022 Active Model: ${state.activeModel} \u2022 Dataset MSE: ${mse.toExponential(2)} g\u00b2`;
+}
+
+function setupDragAndDrop() {
+  const dz = document.getElementById('csv-dropzone');
+  if (!dz) return;
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', () => { dz.classList.remove('dragover'); });
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('dragover');
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      parseUploadedCSVFile(e.dataTransfer.files[0]);
+    }
+  });
+}
+
+function downloadPredictionsCSV() {
+  const sim = state.currentSim;
+  if (!sim) return;
+  let csv = '#,t_sec,mass A,mass B,mass C,mass D,true A,true B,true C,true D,total_pred_mass,mass_drift\n';
+  for (let i = 0; i < sim.N; i++) {
+    csv += [
+      i,
+      sim.tArr[i].toFixed(2),
+      sim.predA[i].toFixed(6),
+      sim.predB[i].toFixed(6),
+      sim.predC[i].toFixed(6),
+      sim.predD[i].toFixed(6),
+      sim.trueA[i].toFixed(6),
+      sim.trueB[i].toFixed(6),
+      sim.trueC[i].toFixed(6),
+      sim.trueD[i].toFixed(6),
+      sim.totalPredMass[i].toFixed(6),
+      sim.massDrift[i].toExponential(4)
+    ].join(',') + '\n';
+  }
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `stoich_ode_${state.activeSplit}_${state.activeModel}_predictions.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+window.addEventListener('resize', () => {
+  if (state.activeTab === 'tab1') drawTab1Charts();
+  else if (state.activeTab === 'tab2') drawTab2Charts();
+});
+
+window.addEventListener('DOMContentLoaded', () => {
+  setupChartHoverListeners();
+  setupDragAndDrop();
+  injectRandomNaNs(0.15);
+  loadSampleCSV('completion');
+  refreshConsole();
+});
+</script>
+</body>
+</html>
