@@ -2,6 +2,10 @@
 
 An interactive reaction-kinetics console with a separate Python benchmark for four ODE model tiers. The web page is a self-contained simulator; the Python runner fits the models against the six CSV files included in this repository.
 
+## Deployment
+
+The static console is published through GitHub Pages at [jithu2517-stack.github.io/stoich-ode-mat05-github-repo](https://jithu2517-stack.github.io/stoich-ode-mat05-github-repo/).
+
 ## Browser console
 
 Open [`index.html`](index.html) or [`stoich_ode_chemical_reaction_kinetics_telemetry_console.html`](stoich_ode_chemical_reaction_kinetics_telemetry_console.html). The charts and scorecard run in the browser using bundled simulator weights and built-in reference trajectories. They are intended for demonstration and are not measurements loaded from the CSV files.
