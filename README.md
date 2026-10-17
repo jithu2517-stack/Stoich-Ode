@@ -1,4 +1,4 @@
-# STOICH-ODE — MAT-05 Reaction Kinetics Console
+# STOICH-ODE —  Reaction Kinetics Console
 
 An interactive reaction-kinetics console with a separate Python benchmark for four ODE model tiers. The web page is a self-contained simulator; the Python runner fits the models against the six CSV files included in this repository.
 
