@@ -18,7 +18,7 @@ if not exist "models\stoich_ode_models.joblib" (
 echo.
 echo Opening the local STOICH-ODE console at http://127.0.0.1:8001
 echo Press Ctrl+C to stop the FastAPI server.
-".venv\Scripts\python.exe" -m uvicorn api:app --reload --host 127.0.0.1 --port 8001
+".venv\Scripts\python.exe" -m uvicorn api:app --host 127.0.0.1 --port 8001
 goto :eof
 
 :error
