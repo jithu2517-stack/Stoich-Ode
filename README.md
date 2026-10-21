@@ -141,7 +141,7 @@ LICENSE                                                # MIT License
 
 ## Author
 
-Solo project by [@jithu2517-stack](https://github.com/jithu2517-stack). One historical commit remains attributed in Git to `Akshayzillah`.
+Solo project by [@jithu2517-stack](https://github.com/jithu2517-stack). The historical commit attributed to [@Akshayzillah](https://github.com/Akshayzillah) is also mine.
 
 ## License
 
