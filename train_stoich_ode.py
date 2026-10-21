@@ -78,7 +78,7 @@ def load_and_clean_csv(fpath: pathlib.Path, m_total: float = 2.0):
     Loads a reaction CSV and applies 4 stages of data hygiene & error recovery:
       1. Header Normalization: Renames '#' -> 't' and strips leading/trailing spaces.
       2. Algebraic Mass-Balance Null Imputation: If 1 species sensor drops out (NaN)
-         at any timestamp, recovers it exactly via m_missing = 2.0 - sum(m_known).
+         at any timestamp, recovers it via m_missing = m_total - sum(m_known).
       3. Irregular Time-Gap Handling: If multiple sensors drop out on an intermediate row,
          drops the corrupted row so the continuous-time Neural ODE integrates smoothly across
          the irregular step size dt = t_{i+1} - t_i (which standard RNNs/LSTMs cannot do).
@@ -148,7 +148,7 @@ def audit_dataset_errors_and_null_recovery(data_dir: pathlib.Path) -> dict:
     for row_idx in [5, 12, 24, 37, 49, 63, 78, 91]:
         col_idx = int(rng.integers(0, 4))
         col_name = species_cols[col_idx]
-        true_vals.append((row_idx, col_name, float(df_corrupt.loc[row_idx, col_name])))
+        true_vals.append((float(df_corrupt.loc[row_idx, "#"]), col_idx, float(df_corrupt.loc[row_idx, col_name])))
         df_corrupt.loc[row_idx, col_name] = np.nan
 
     df_corrupt.loc[18, ["mass A", "mass C"]] = np.nan
@@ -159,13 +159,12 @@ def audit_dataset_errors_and_null_recovery(data_dir: pathlib.Path) -> dict:
         df_corrupt.to_csv(corrupt_path, index=False)
         t_clean, Y_clean, diag = load_and_clean_csv(corrupt_path)
 
-        df_reloaded = pd.read_csv(corrupt_path)
-        df_reloaded.columns = [c.strip() for c in df_reloaded.columns]
         imputation_errors = []
-        for r_idx, c_name, orig_val in true_vals:
-            row = df_reloaded.loc[r_idx, species_cols]
-            na_mask = row.isnull()
-            recovered_val = 2.0 - float(row[~na_mask].sum())
+        for timestamp, col_idx, orig_val in true_vals:
+            cleaned_indices = np.flatnonzero(np.isclose(t_clean, timestamp))
+            if len(cleaned_indices) != 1:
+                raise AssertionError(f"Expected one cleaned row at t={timestamp}, found {len(cleaned_indices)}.")
+            recovered_val = float(Y_clean[cleaned_indices[0], col_idx])
             imputation_errors.append(abs(recovered_val - orig_val))
 
     return {
@@ -189,7 +188,9 @@ class BaselineUnconstrainedNeuralODE:
     ----------------------------------------------------
     Architecture: 4 -> 16 (tanh) -> 4 unconstrained derivatives dy/dt = f_theta(y).
     Trained with single-stage MSE loss without physical constraints.
-    Shows why naive Neural ODEs drift away from total mass = 2.0g during extrapolation.
+    Mass conservation is not enforced. The checked-in Python fit stays within about 1e-8 g
+    of the initial total on the supplied trajectory; separate fixed browser-demo weights
+    illustrate possible drift and are not the parameters evaluated by this model.
     """
     def __init__(self, hidden_dim: int = 16, seed: int = 42):
         self.hidden_dim = hidden_dim

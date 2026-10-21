@@ -1239,7 +1239,7 @@
 
           <button class="split-btn" data-split="completion" onclick="selectSplit('completion')">
             <div>
-              <span class="split-name">Completion [0, 100]</span>
+              <span class="split-name">Completion [0, 99.5]</span>
               <span class="split-sub">Sub-step dense grid &bull; 200 pts</span>
             </div>
             <span class="split-badge">&Delta;t=0.5s</span>
@@ -1269,7 +1269,7 @@
               <span class="model-pill pill-drift">MASS DRIFT</span>
             </div>
             <div class="model-eq">dy/dt = f_&#952;(y) &nbsp;[Single-Stage MSE]</div>
-            <div class="model-desc">Unconstrained MLP leaks mass off the 2.0g manifold and diverges for t &gt; 100s.</div>
+            <div class="model-desc">No conservation law is enforced. These illustrative browser weights show drift; the separately fitted Python M1 stays near 2.0 g on the supplied trajectory.</div>
           </div>
 
           <div class="model-card warn-model" data-model="M2" onclick="selectModel('M2')">
@@ -1429,7 +1429,7 @@
               <span>Continuous-Time Stoichiometric Nullspace Projection</span>
             </div>
             <div class="pitch-sub">
-              Press <strong>&rtrif; Play Live Kinetics</strong> to scrub reaction time <span class="mono">t</span> across the horizon and watch how unconstrained models (<span class="mono">M1/M2</span>) leak mass while <span class="mono">M3/M4</span> lock onto <span class="mono">&sum;m(t) = 2.000000g</span>.
+              This browser demo uses fixed illustrative weights. Press <strong>&rtrif; Play Live Kinetics</strong> to compare their mass behavior: browser-demo <span class="mono">M1/M2</span> can drift, while <span class="mono">M3/M4</span> conserve <span class="mono">&sum;m(t) = 2.000000 g</span>. The fitted Python models are separate.
             </div>
             <div class="scrubber-bar">
               <button class="inst-btn emerald" id="play-sim-btn" onclick="togglePlayAnimation()" style="min-width: 155px;">
@@ -1568,7 +1568,7 @@
               <div class="chart-panel-title">
                 <span>MASS CONSERVATION DRIFT &Delta;m(t) = m&#770;(t) &minus; m&#8320;</span>
               </div>
-              <div class="chart-panel-meta">Red Dashed = Baseline M1 Drift &bull; Solid = Active Model</div>
+              <div class="chart-panel-meta">Red Dashed = Illustrative Browser M1 &bull; Solid = Active Browser Demo Model</div>
             </div>
             <div class="canvas-wrap-med">
               <canvas id="driftChart"></canvas>
@@ -1594,7 +1594,7 @@
           <div class="explain-card" style="cursor:pointer;" onclick="selectSplit('reconstruction')">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span class="mono" style="font-weight:700; font-size:11.5px;">OBJECTIVE 01 // RECONSTRUCTION [0, 100]s</span>
-              <span class="status-tag exact" id="mini-tag-reconstruction">R² = 1.000000</span>
+              <span class="status-tag exact" id="mini-tag-reconstruction">R² = 1.000000 (browser sim)</span>
             </div>
             <div style="height: 125px; border: 1px solid var(--border-hairline); background: var(--bg-panel);">
               <canvas id="miniChart-reconstruction" style="width:100%; height:100%; display:block;"></canvas>
@@ -1606,8 +1606,8 @@
 
           <div class="explain-card" style="cursor:pointer;" onclick="selectSplit('completion')">
             <div style="display:flex; justify-content:space-between; align-items:center;">
-              <span class="mono" style="font-weight:700; font-size:11.5px;">OBJECTIVE 02 // COMPLETION [0, 100]s</span>
-              <span class="status-tag exact" id="mini-tag-completion">R² = 1.000000</span>
+              <span class="mono" style="font-weight:700; font-size:11.5px;">OBJECTIVE 02 // COMPLETION [0, 99.5]s</span>
+              <span class="status-tag exact" id="mini-tag-completion">R² = 1.000000 (browser sim)</span>
             </div>
             <div style="height: 125px; border: 1px solid var(--border-hairline); background: var(--bg-panel);">
               <canvas id="miniChart-completion" style="width:100%; height:100%; display:block;"></canvas>
@@ -1620,7 +1620,7 @@
           <div class="explain-card" style="cursor:pointer;" onclick="selectSplit('extrapolation')">
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <span class="mono" style="font-weight:700; font-size:11.5px;">OBJECTIVE 03 // EXTRAPOLATION [0, 200]s</span>
-              <span class="status-tag exact" id="mini-tag-extrapolation">R² = 1.000000</span>
+              <span class="status-tag exact" id="mini-tag-extrapolation">R² = 1.000000 (browser sim)</span>
             </div>
             <div style="height: 125px; border: 1px solid var(--border-hairline); background: var(--bg-panel);">
               <canvas id="miniChart-extrapolation" style="width:100%; height:100%; display:block;"></canvas>
@@ -1637,10 +1637,10 @@
             <div class="chart-panel-title">
               <span>12-ROW INTERACTIVE SIMULATOR SCORECARD // CLICK ANY ROW TO LOAD A VIEW</span>
             </div>
-            <div class="chart-panel-meta">3 Demo Horizons &times; 4 Model Architectures</div>
+            <div class="chart-panel-meta">3 Browser Demo Horizons &times; 4 Illustrative Models</div>
           </div>
           <div role="note" style="margin:0 16px 14px; padding:12px 14px; border:1px solid rgba(93,169,255,.35); border-radius:8px; background:rgba(93,169,255,.08); color:var(--text-secondary); font-size:12px; line-height:1.55;">
-            <strong style="color:var(--text-primary);">Scorecard scope:</strong> these browser scores are recomputed against the console's built-in simulator trajectories; they are not read from the six CSV files. For model fitting and CSV-based evaluation, use <span class="mono">kaggle_synthetic_reaction_data/benchmark_results.csv</span> generated by <span class="mono">train_stoich_ode.py</span>. The supplied train data ends at 99s; only extrapolation test rows after 99s are a strict future-only evaluation.
+            <strong style="color:var(--text-primary);">Browser simulator only:</strong> these scores use fixed illustrative weights and built-in trajectories, not the six CSV files or the Python JobLib artifact. Browser M3 has 16 hidden units (Python M3 has 12); browser M2 and M3 share their first-layer demo weights. For fitted-model metrics, use <span class="mono">kaggle_synthetic_reaction_data/benchmark_results.csv</span>. Training ends at 99s; only extrapolation rows after 99s are strict future-only evaluation.
           </div>
           <div class="data-table-wrap">
             <table class="inst-table" id="benchmark-12-table">
@@ -1652,7 +1652,7 @@
                   <th>Vector Field Formulation</th>
                   <th class="num">Test MSE (g&sup2;)</th>
                   <th class="num">Test RMSE (g)</th>
-                  <th class="num">Demo R&sup2;</th>
+                  <th class="num">Browser sim R&sup2;</th>
                   <th class="num">Max |m&#770;&minus;m&#8320;| (g)</th>
                   <th class="num">Sum Mass Violation (g)</th>
                   <th>Admissibility</th>
@@ -1833,7 +1833,7 @@
           </div>
           <div class="audit-card-body">
             <div style="font-size:12.5px; color:var(--text-secondary); line-height:1.55; margin-bottom:12px;">
-              These predictions come from the fitted Python model parameters in <span class="mono">models/stoich_ode_models.joblib</span>. The page sends your settings to the local FastAPI server and displays its response.
+              These predictions come from the fitted Python parameters in <span class="mono">models/stoich_ode_models.joblib</span>, served by the local FastAPI process. The API uses forward Euler with a default maximum step of 0.1 s; this numerical trajectory is not the exact continuous-time solution. Its browser charts use separate illustrative weights.
             </div>
             <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(135px,1fr)); gap:9px; margin-bottom:12px;">
               <label class="mono" style="font-size:11px; color:var(--text-secondary);">MODEL
@@ -1849,14 +1849,14 @@
               <label class="mono" style="font-size:11px; color:var(--sp-c);">INITIAL C (g)<input id="api-c0" type="number" step="0.1" min="0" value="0" style="display:block; width:100%; margin-top:5px; padding:8px; background:var(--bg-recessed); color:var(--text-primary); border:1px solid var(--border-strong); font:inherit;"></label>
               <label class="mono" style="font-size:11px; color:var(--sp-d);">INITIAL D (g)<input id="api-d0" type="number" step="0.1" min="0" value="0" style="display:block; width:100%; margin-top:5px; padding:8px; background:var(--bg-recessed); color:var(--text-primary); border:1px solid var(--border-strong); font:inherit;"></label>
               <label class="mono" style="font-size:11px; color:var(--text-secondary);">END TIME (s)<input id="api-end-time" type="number" step="1" min="0.1" max="200" value="20" style="display:block; width:100%; margin-top:5px; padding:8px; background:var(--bg-recessed); color:var(--text-primary); border:1px solid var(--border-strong); font:inherit;"></label>
-              <label class="mono" style="font-size:11px; color:var(--text-secondary);">MAX STEP SIZE (s)<input id="api-step-size" type="number" step="0.1" min="0.01" max="10" value="1" style="display:block; width:100%; margin-top:5px; padding:8px; background:var(--bg-recessed); color:var(--text-primary); border:1px solid var(--border-strong); font:inherit;"></label>
+              <label class="mono" style="font-size:11px; color:var(--text-secondary);">MAX STEP SIZE (s)<input id="api-step-size" type="number" step="0.1" min="0.01" max="10" value="0.1" style="display:block; width:100%; margin-top:5px; padding:8px; background:var(--bg-recessed); color:var(--text-primary); border:1px solid var(--border-strong); font:inherit;"></label>
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;">
               <button class="inst-btn emerald" id="api-run-button" onclick="runLocalModelPrediction()">▶ RUN FITTED PYTHON MODEL</button>
               <button class="inst-btn" onclick="checkLocalApiStatus()">CHECK API</button>
               <a class="inst-btn" href="http://127.0.0.1:8001/docs" target="_blank" rel="noopener">LOCAL API DOCS ↗</a>
             </div>
-            <div class="code-slab" id="api-result-summary" role="status" aria-live="polite" style="min-height:45px; white-space:pre-wrap;">Waiting for the local FastAPI service. Start it with <strong>python -m uvicorn api:app --reload</strong> from the project folder.</div>
+            <div class="code-slab" id="api-result-summary" role="status" aria-live="polite" style="min-height:45px; white-space:pre-wrap;">Waiting for the local FastAPI service. Start it with <strong>python -m uvicorn api:app --host 127.0.0.1 --port 8001</strong> from the project folder.</div>
             <div class="data-table-wrap" style="max-height:250px; overflow:auto; margin-top:10px; display:none;" id="api-result-table-wrap">
               <table class="inst-table">
                 <thead><tr><th>t (s)</th><th class="num" style="color:var(--sp-a);">A (g)</th><th class="num" style="color:var(--sp-b);">B (g)</th><th class="num" style="color:var(--sp-c);">C (g)</th><th class="num" style="color:var(--sp-d);">D (g)</th><th class="num">Total (g)</th></tr></thead>
@@ -1873,7 +1873,7 @@
               DRAG &amp; DROP KAGGLE / TELEMETRY CSV FILE &nbsp;<span class="mono" style="color: var(--sp-a); font-size: 12px;">[Schema: #, mass A, mass B, mass C, mass D]</span>
             </div>
             <div style="font-size: 12.5px; color: var(--text-secondary);">
-              Automatically detects step size &Delta;t, repairs any single-channel <span class="mono">NaN</span> dropouts via <span class="mono">m_missing = 2.0 &minus; &sum;m_known</span>, and evaluates active model predictions (<span class="mono" id="tab3-active-model-label">M4</span>).
+              Uses the file timestamps, repairs single-channel <span class="mono">NaN</span> dropouts from the conserved total mass, and skips rows with multiple missing sensors before evaluating the active model (<span class="mono" id="tab3-active-model-label">M4</span>).
             </div>
           </div>
 
@@ -1960,7 +1960,7 @@ Equilibrium limit (t -> inf): [A]=0, [B]=1.0g, [C]=0, [D]=1.0g</div>
                   &rtrif; Run Live In-Browser Training (40 Epochs)
                 </button>
               </div>
-              <div class="code-slab" id="live-train-console-log" style="height: 145px; overflow-y: auto;">[READY] Browser simulator weights loaded (M1 MLP, M2 paper-inspired baseline, M3 stoichiometric flux MLP, M4 sparse hybrid).
+              <div class="code-slab" id="live-train-console-log" style="height: 145px; overflow-y: auto;">[READY] Fixed illustrative browser-demo parameters loaded. They are separate from the fitted Python JobLib model.
 Click "Run Live In-Browser Training" to run the simulator demonstration and sparse rate fit in your browser.</div>
             </div>
           </div>
@@ -1987,7 +1987,7 @@ Click "Run Live In-Browser Training" to run the simulator demonstration and spar
               <span id="csv-table-title">LIVE DATA PREVIEW // TRUE vs. PREDICTED MASSES</span>
             </div>
             <div class="chart-panel-meta" id="csv-summary-metrics">
-               Rows: 200 &bull; Imputed NaNs: 0 &bull; Demo R&sup2;: 1.000000
+               Rows: 200 &bull; Imputed NaNs: 0 &bull; Browser sim R&sup2;: 1.000000
             </div>
           </div>
           <div class="data-table-wrap" style="max-height: 340px; overflow-y: auto;">
@@ -2021,7 +2021,7 @@ const K1 = 0.1000;
 const K2 = 0.0500;
 
 // Bundled browser simulator weights; CSV-based model results are produced separately by train_stoich_ode.py.
-const TRAINED_WEIGHTS = {"M1": {"W1": [[-0.505241, -0.290819, -0.14797, -0.092862, 0.117453, 0.102191, 0.08129, 0.186858, 0.448888, 0.102726, 0.14147, 0.069272, 0.097551, -0.309864, 0.095033, -0.10622], [-0.594721, 0.054688, -0.038801, -0.050651, 0.055983, 0.052718, 0.045776, 0.066959, -0.147819, 0.053137, 0.061772, 0.042021, 0.051688, 0.591941, 0.051155, -0.052872], [0.009837, -0.102003, -0.027863, -0.028899, -0.036878, 0.021449, 0.001791, -0.209759, -0.011631, -0.005448, -0.116542, 0.048731, 0.004184, -0.030402, 0.012657, -0.021074], [-0.00279, -0.071792, -0.011663, -0.003927, 0.014457, 0.00663, 0.007403, 0.004131, -0.104307, 0.010662, 0.015399, -0.004155, 0.00887, 0.02364, 0.007287, -0.007151]], "b1": [0.002076, 0.019705, 0.046255, 0.023085, -0.034948, -0.027883, -0.016368, -0.045891, 0.076719, -0.026796, -0.045576, -0.013994, -0.024106, 0.211309, -0.023178, 0.030087], "W2": [[-0.257969, -0.257879, 0.257879, 0.257969], [0.152936, 0.14223, -0.142229, -0.152936], [0.11321, 0.059878, -0.059877, -0.113211], [0.080201, 0.031329, -0.031323, -0.080201], [-0.071838, -0.080171, 0.080172, 0.071835], [-0.08416, -0.04056, 0.040573, 0.08416], [-0.058741, -0.040026, 0.040025, 0.058743], [-0.051297, -0.202509, 0.202511, 0.051297], [-0.215074, -0.208921, 0.208922, 0.215074], [-0.072911, -0.055534, 0.055534, 0.072907], [-0.059382, -0.134562, 0.134556, 0.059383], [-0.071026, -0.007136, 0.007127, 0.071029], [-0.072786, -0.047462, 0.047458, 0.072792], [-0.312634, -0.312131, 0.312131, 0.312634], [-0.074547, -0.04147, 0.041483, 0.074549], [0.086922, 0.042867, -0.042862, -0.086914]], "b2": [0.062785, 0.060556, -0.060856, -0.063155]}, "M2": {"W1": [[0.055311, 0.156924, -0.122139, -0.089448, 0.077844, 0.189331, 0.043913, 0.18757, -0.050219, 0.106301, -0.058194, -0.132908, -0.196644, -0.10884, 0.125621, 0.105458], [-0.014447, -0.129763, -0.019861, 0.029453, 0.247128, 0.093832, -0.047554, -0.204928, 0.00622, -0.193204, -0.264499, 0.128752, -0.153848, 0.045856, -0.262199, -0.044995], [0.023498, 0.011678, -0.006456, -0.011344, -0.05957, -0.02981, -0.068001, 0.006929, 0.090421, -0.091357, 0.008847, -0.022662, -0.025942, 0.052621, -0.221259, 0.014127], [0.011594, -0.018432, 0.000833, 0.000942, 0.041534, -0.033425, -0.027604, 0.006181, -0.04096, -0.109073, -0.052714, 0.035767, 0.007049, -0.037289, -0.183735, -0.01166]], "b1": [0.030525, 0.48057, 0.161248, -0.064532, -0.03836, -0.673279, -0.054324, -0.507915, -0.060312, -0.334976, 0.749524, -0.468301, -0.277826, -0.14585, 0.034049, 0.110888], "W2": [[-0.621467, -0.210468, 0.210473, 0.621307], [-0.52714, -0.660701, 0.660533, 0.5273], [0.827429, 0.891028, -0.891051, -0.827453], [0.376907, 0.267259, -0.267431, -0.376763], [0.29944, 0.299441, -0.299865, -0.299914], [-0.729731, -0.731854, 0.731583, 0.729448], [0.050164, -0.202236, 0.201749, -0.050232], [1.314829, 1.308501, -1.308756, -1.314924], [0.188138, 0.495361, -0.495315, -0.188459], [0.320651, 0.314875, -0.314821, -0.320677], [0.555296, 0.559244, -0.559453, -0.555263], [0.575032, 0.461021, -0.461145, -0.574766], [-1.155514, -1.148503, 1.149, 1.155183], [0.123304, 0.03578, -0.03571, -0.123167], [-0.064686, -0.056513, 0.056892, 0.064552], [-0.271871, -0.282753, 0.282693, 0.271694]], "b2": [0.101824, 0.067988, -0.067993, -0.101859]}, "M3": {"W1": [[0.055311, 0.156924, -0.122139, -0.089448, 0.077844, 0.189331, 0.043913, 0.18757, -0.050219, 0.106301, -0.058194, -0.132908, -0.196644, -0.10884, 0.125621, 0.105458], [-0.014447, -0.129763, -0.019861, 0.029453, 0.247128, 0.093832, -0.047554, -0.204928, 0.00622, -0.193204, -0.264499, 0.128752, -0.153848, 0.045856, -0.262199, -0.044995], [0.023498, 0.011678, -0.006456, -0.011344, -0.05957, -0.02981, -0.068001, 0.006929, 0.090421, -0.091357, 0.008847, -0.022662, -0.025942, 0.052621, -0.221259, 0.014127], [0.011594, -0.018432, 0.000833, 0.000942, 0.041534, -0.033425, -0.027604, 0.006181, -0.04096, -0.109073, -0.052714, 0.035767, 0.007049, -0.037289, -0.183735, -0.01166]], "b1": [0.030525, 0.48057, 0.161248, -0.064532, -0.03836, -0.673279, -0.054324, -0.507915, -0.060312, -0.334976, 0.749524, -0.468301, -0.277826, -0.14585, 0.034049, 0.110888], "W2": [[0.621468, 0.410945], [0.527058, -0.133464], [-0.827517, 0.063622], [-0.376888, -0.109462], [-0.299682, -0.000159], [0.729399, -0.002412], [-0.050135, -0.252337], [-1.314838, -0.006358], [-0.188314, 0.307193], [-0.320657, -0.00594], [-0.555277, 0.003956], [-0.574787, -0.113487], [1.155399, 0.006536], [-0.12329, -0.087614], [0.064674, 0.008041], [0.271907, -0.010762]], "b2": [-0.101849, -0.033846]}, "M4": {"K": [[0.1, 0.0, 0.0, 0.0], [0.0, 0.05, 0.0, 0.0]]}};
+const BROWSER_DEMO_WEIGHTS = {"M1": {"W1": [[-0.505241, -0.290819, -0.14797, -0.092862, 0.117453, 0.102191, 0.08129, 0.186858, 0.448888, 0.102726, 0.14147, 0.069272, 0.097551, -0.309864, 0.095033, -0.10622], [-0.594721, 0.054688, -0.038801, -0.050651, 0.055983, 0.052718, 0.045776, 0.066959, -0.147819, 0.053137, 0.061772, 0.042021, 0.051688, 0.591941, 0.051155, -0.052872], [0.009837, -0.102003, -0.027863, -0.028899, -0.036878, 0.021449, 0.001791, -0.209759, -0.011631, -0.005448, -0.116542, 0.048731, 0.004184, -0.030402, 0.012657, -0.021074], [-0.00279, -0.071792, -0.011663, -0.003927, 0.014457, 0.00663, 0.007403, 0.004131, -0.104307, 0.010662, 0.015399, -0.004155, 0.00887, 0.02364, 0.007287, -0.007151]], "b1": [0.002076, 0.019705, 0.046255, 0.023085, -0.034948, -0.027883, -0.016368, -0.045891, 0.076719, -0.026796, -0.045576, -0.013994, -0.024106, 0.211309, -0.023178, 0.030087], "W2": [[-0.257969, -0.257879, 0.257879, 0.257969], [0.152936, 0.14223, -0.142229, -0.152936], [0.11321, 0.059878, -0.059877, -0.113211], [0.080201, 0.031329, -0.031323, -0.080201], [-0.071838, -0.080171, 0.080172, 0.071835], [-0.08416, -0.04056, 0.040573, 0.08416], [-0.058741, -0.040026, 0.040025, 0.058743], [-0.051297, -0.202509, 0.202511, 0.051297], [-0.215074, -0.208921, 0.208922, 0.215074], [-0.072911, -0.055534, 0.055534, 0.072907], [-0.059382, -0.134562, 0.134556, 0.059383], [-0.071026, -0.007136, 0.007127, 0.071029], [-0.072786, -0.047462, 0.047458, 0.072792], [-0.312634, -0.312131, 0.312131, 0.312634], [-0.074547, -0.04147, 0.041483, 0.074549], [0.086922, 0.042867, -0.042862, -0.086914]], "b2": [0.062785, 0.060556, -0.060856, -0.063155]}, "M2": {"W1": [[0.055311, 0.156924, -0.122139, -0.089448, 0.077844, 0.189331, 0.043913, 0.18757, -0.050219, 0.106301, -0.058194, -0.132908, -0.196644, -0.10884, 0.125621, 0.105458], [-0.014447, -0.129763, -0.019861, 0.029453, 0.247128, 0.093832, -0.047554, -0.204928, 0.00622, -0.193204, -0.264499, 0.128752, -0.153848, 0.045856, -0.262199, -0.044995], [0.023498, 0.011678, -0.006456, -0.011344, -0.05957, -0.02981, -0.068001, 0.006929, 0.090421, -0.091357, 0.008847, -0.022662, -0.025942, 0.052621, -0.221259, 0.014127], [0.011594, -0.018432, 0.000833, 0.000942, 0.041534, -0.033425, -0.027604, 0.006181, -0.04096, -0.109073, -0.052714, 0.035767, 0.007049, -0.037289, -0.183735, -0.01166]], "b1": [0.030525, 0.48057, 0.161248, -0.064532, -0.03836, -0.673279, -0.054324, -0.507915, -0.060312, -0.334976, 0.749524, -0.468301, -0.277826, -0.14585, 0.034049, 0.110888], "W2": [[-0.621467, -0.210468, 0.210473, 0.621307], [-0.52714, -0.660701, 0.660533, 0.5273], [0.827429, 0.891028, -0.891051, -0.827453], [0.376907, 0.267259, -0.267431, -0.376763], [0.29944, 0.299441, -0.299865, -0.299914], [-0.729731, -0.731854, 0.731583, 0.729448], [0.050164, -0.202236, 0.201749, -0.050232], [1.314829, 1.308501, -1.308756, -1.314924], [0.188138, 0.495361, -0.495315, -0.188459], [0.320651, 0.314875, -0.314821, -0.320677], [0.555296, 0.559244, -0.559453, -0.555263], [0.575032, 0.461021, -0.461145, -0.574766], [-1.155514, -1.148503, 1.149, 1.155183], [0.123304, 0.03578, -0.03571, -0.123167], [-0.064686, -0.056513, 0.056892, 0.064552], [-0.271871, -0.282753, 0.282693, 0.271694]], "b2": [0.101824, 0.067988, -0.067993, -0.101859]}, "M3": {"W1": [[0.055311, 0.156924, -0.122139, -0.089448, 0.077844, 0.189331, 0.043913, 0.18757, -0.050219, 0.106301, -0.058194, -0.132908, -0.196644, -0.10884, 0.125621, 0.105458], [-0.014447, -0.129763, -0.019861, 0.029453, 0.247128, 0.093832, -0.047554, -0.204928, 0.00622, -0.193204, -0.264499, 0.128752, -0.153848, 0.045856, -0.262199, -0.044995], [0.023498, 0.011678, -0.006456, -0.011344, -0.05957, -0.02981, -0.068001, 0.006929, 0.090421, -0.091357, 0.008847, -0.022662, -0.025942, 0.052621, -0.221259, 0.014127], [0.011594, -0.018432, 0.000833, 0.000942, 0.041534, -0.033425, -0.027604, 0.006181, -0.04096, -0.109073, -0.052714, 0.035767, 0.007049, -0.037289, -0.183735, -0.01166]], "b1": [0.030525, 0.48057, 0.161248, -0.064532, -0.03836, -0.673279, -0.054324, -0.507915, -0.060312, -0.334976, 0.749524, -0.468301, -0.277826, -0.14585, 0.034049, 0.110888], "W2": [[0.621468, 0.410945], [0.527058, -0.133464], [-0.827517, 0.063622], [-0.376888, -0.109462], [-0.299682, -0.000159], [0.729399, -0.002412], [-0.050135, -0.252337], [-1.314838, -0.006358], [-0.188314, 0.307193], [-0.320657, -0.00594], [-0.555277, 0.003956], [-0.574787, -0.113487], [1.155399, 0.006536], [-0.12329, -0.087614], [0.064674, 0.008041], [0.271907, -0.010762]], "b2": [-0.101849, -0.033846]}, "M4": {"K": [[0.1, 0.0, 0.0, 0.0], [0.0, 0.05, 0.0, 0.0]]}};
 
 const S_MAT = [
   [-1.0,  0.0],
@@ -2043,12 +2043,12 @@ const SPLIT_CONFIGS = {
   },
   completion: {
     id: 'completion',
-    name: 'Completion [0, 100]',
+    name: 'Completion [0, 99.5]',
     tag: 'SPLIT: COMPL',
-    tMax: 100.0,
+    tMax: 99.5,
     dt: 0.5,
     numPts: 200,
-    horizonText: 't \u2208 [0, 100]s',
+    horizonText: 't \u2208 [0, 99.5]s',
     subText: '\u0394t = 0.5s \u2022 200 pts \u2022 Real-Time ODE'
   },
   extrapolation: {
@@ -2124,7 +2124,8 @@ const state = {
   currentSim: null,
   baselineM1Sim: null,
   nanAuditData: [],
-  ingestedCSV: null
+  ingestedCSV: null,
+  csvLoadToken: 0
 };
 
 function evalMLPForward(yVec, wObj) {
@@ -2148,12 +2149,12 @@ function evalMLPForward(yVec, wObj) {
 
 function evalModelVectorField(modelKey, yVec) {
   if (modelKey === 'M1' || modelKey === 'M2') {
-    return evalMLPForward(yVec, TRAINED_WEIGHTS[modelKey]);
+    return evalMLPForward(yVec, BROWSER_DEMO_WEIGHTS[modelKey]);
   } else if (modelKey === 'M3') {
-    const r = evalMLPForward(yVec, TRAINED_WEIGHTS.M3);
+    const r = evalMLPForward(yVec, BROWSER_DEMO_WEIGHTS.M3);
     return [-r[0], -r[0] + r[1], +r[0] - r[1], +r[0]];
   } else {
-    const K = TRAINED_WEIGHTS.M4.K;
+    const K = BROWSER_DEMO_WEIGHTS.M4.K;
     const A = yVec[0], B = yVec[1], C = yVec[2], D = yVec[3];
     const phi = [A * B, C, A * C, B * D];
     const r0 = K[0][0]*phi[0] + K[0][1]*phi[1] + K[0][2]*phi[2] + K[0][3]*phi[3];
@@ -2227,7 +2228,7 @@ function simulateSystem(splitKey, modelKey, y0) {
     predD.push(yPred[3]);
 
     if (modelKey === 'M3') {
-      const r = evalMLPForward(yPred, TRAINED_WEIGHTS.M3);
+      const r = evalMLPForward(yPred, BROWSER_DEMO_WEIGHTS.M3);
       flux1.push(Math.max(0, r[0]));
       flux2.push(Math.max(0, r[1]));
     } else {
@@ -2692,7 +2693,7 @@ function drawMiniObjectiveCharts() {
     const sim = simulateSystem(sKey, state.activeModel, state.y0);
     const tagEl = document.getElementById('mini-tag-' + sKey);
     if (tagEl) {
-      tagEl.textContent = 'R² = ' + sim.metrics.r2.toFixed(6);
+      tagEl.textContent = 'R² = ' + sim.metrics.r2.toFixed(6) + ' (browser sim)';
       tagEl.className = 'status-tag ' + (sim.metrics.r2 > 0.999 ? 'exact' : (sim.metrics.r2 > 0.98 ? 'soft' : 'drift'));
     }
 
@@ -2806,11 +2807,11 @@ function runLiveBrowserOptimization() {
         sAB_r1 += Phi[i][0] * R_emp[i][0]; sAB2 += Phi[i][0] * Phi[i][0];
         sC_r2  += Phi[i][1] * R_emp[i][1]; sC2  += Phi[i][1] * Phi[i][1];
       }
-      TRAINED_WEIGHTS.M4.K = [
+      BROWSER_DEMO_WEIGHTS.M4.K = [
         [sAB_r1 / (sAB2 + 1e-15), 0.0, 0.0, 0.0],
         [0.0, sC_r2 / (sC2 + 1e-15), 0.0, 0.0]
       ];
-      logEl.textContent += `[CONVERGED] Exact Sparse Rate Law Recovered: r1 = ${TRAINED_WEIGHTS.M4.K[0][0].toFixed(5)}*[A][B], r2 = ${TRAINED_WEIGHTS.M4.K[1][1].toFixed(5)}*[C] (R² = 1.000000)`;
+      logEl.textContent += `[CONVERGED] Browser-demo sparse rate law fit: r1 = ${BROWSER_DEMO_WEIGHTS.M4.K[0][0].toFixed(5)}*[A][B], r2 = ${BROWSER_DEMO_WEIGHTS.M4.K[1][1].toFixed(5)}*[C] (R² = 1.000000, browser sim)`;
       logEl.scrollTop = logEl.scrollHeight;
       badgeEl.textContent = 'LIVE FIT CONVERGED';
       badgeEl.className = 'status-tag exact';
@@ -2922,7 +2923,7 @@ function drawSpeciesTrajectoryChart() {
     ctx.fillStyle = pal.axis;
     ctx.font = '11px "IBM Plex Mono", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText(tVal.toFixed(0) + 's', x, pad.top + ph + 20);
+    ctx.fillText(tVal.toFixed(Number.isInteger(tMax) ? 0 : 1) + 's', x, pad.top + ph + 20);
   }
 
   const speciesSeries = [
@@ -3485,22 +3486,150 @@ function drawEulerZoomChart() {
 // TAB 03: CUSTOM CSV INGESTION & EXPORT
 // ============================================================================
 
-function loadSampleCSV(preset) {
+function splitCSVLine(line) {
+  const fields = [];
+  let field = '';
+  let quoted = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      if (quoted && line[i + 1] === '"') {
+        field += '"';
+        i++;
+      } else {
+        quoted = !quoted;
+      }
+    } else if (char === ',' && !quoted) {
+      fields.push(field.trim());
+      field = '';
+    } else {
+      field += char;
+    }
+  }
+  if (quoted) throw new Error('The CSV contains an unmatched quote.');
+  fields.push(field.trim());
+  return fields;
+}
+
+function parseCSVNumber(raw, label, rowNumber) {
+  const value = String(raw ?? '').trim();
+  if (value === '' || /^(nan|na|n\/a|null)$/i.test(value)) return NaN;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`Row ${rowNumber}: ${label} must be a finite number or blank.`);
+  }
+  return parsed;
+}
+
+function parseCSVText(text, sourceName) {
+  const lines = text.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+  if (lines.length < 2) throw new Error('The CSV must contain a header and at least one data row.');
+
+  const headers = splitCSVLine(lines[0]).map(header => header.trim().toLowerCase());
+  const timeHeaders = ['t_sec', 'time_sec', 'time (s)', 't (s)', 'time', 't', 'seconds', '#', 'unnamed: 0'];
+  const idxTime = timeHeaders.map(name => headers.indexOf(name)).find(index => index >= 0) ?? -1;
+  const idxA = headers.findIndex(header => header.includes('mass a') || header === 'a');
+  const idxB = headers.findIndex(header => header.includes('mass b') || header === 'b');
+  const idxC = headers.findIndex(header => header.includes('mass c') || header === 'c');
+  const idxD = headers.findIndex(header => header.includes('mass d') || header === 'd');
+  if ([idxTime, idxA, idxB, idxC, idxD].some(index => index < 0)) {
+    throw new Error('Required columns were not found. Include a time column (#, t, or t_sec) and mass A, mass B, mass C, mass D.');
+  }
+
+  const rawRows = [];
+  let droppedRows = 0;
+  for (let i = 1; i < lines.length; i++) {
+    const columns = splitCSVLine(lines[i]);
+    const rowNumber = i + 1;
+    const maxIndex = Math.max(idxTime, idxA, idxB, idxC, idxD);
+    if (columns.length <= maxIndex) {
+      throw new Error(`Row ${rowNumber}: expected at least ${maxIndex + 1} columns.`);
+    }
+    const t = parseCSVNumber(columns[idxTime], 'time', rowNumber);
+    if (!Number.isFinite(t)) throw new Error(`Row ${rowNumber}: time cannot be blank.`);
+    const values = [idxA, idxB, idxC, idxD].map((index, speciesIndex) =>
+      parseCSVNumber(columns[index], `mass ${'ABCD'[speciesIndex]}`, rowNumber)
+    );
+    const missingCount = values.filter(value => !Number.isFinite(value)).length;
+    if (missingCount > 1) {
+      droppedRows++;
+      continue;
+    }
+    if (values.some(value => Number.isFinite(value) && value < 0)) {
+      throw new Error(`Row ${rowNumber}: species masses cannot be negative.`);
+    }
+    rawRows.push({ idx: rowNumber - 2, t, values, missingCount });
+  }
+
+  const completeRow = rawRows.find(row => row.missingCount === 0);
+  if (!completeRow) throw new Error('At least one complete row is needed to establish the total mass for dropout recovery.');
+  const totalMass = completeRow.values.reduce((sum, value) => sum + value, 0);
+  const rows = rawRows.map(row => {
+    const values = row.values.slice();
+    let imputedCol = null;
+    if (row.missingCount === 1) {
+      const missingIndex = values.findIndex(value => !Number.isFinite(value));
+      const knownTotal = values.reduce((sum, value) => sum + (Number.isFinite(value) ? value : 0), 0);
+      const inferred = totalMass - knownTotal;
+      if (inferred < -1e-9) {
+        throw new Error(`CSV row ${row.idx + 2}: known masses exceed the conserved total, so the missing sensor cannot be recovered.`);
+      }
+      values[missingIndex] = Math.max(0, inferred);
+      imputedCol = `mass ${'ABCD'[missingIndex]}`;
+    }
+    return { idx: row.idx, t: row.t, a: values[0], b: values[1], c: values[2], d: values[3], imputedCol };
+  }).sort((left, right) => left.t - right.t);
+
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i].t <= rows[i - 1].t) throw new Error('Timestamps must be unique and strictly increasing.');
+  }
+  if (rows.length < 2) throw new Error('At least two usable rows are needed to compare a trajectory.');
+  const steps = rows.slice(1).map((row, index) => row.t - rows[index].t).sort((a, b) => a - b);
+  const dt = steps[Math.floor(steps.length / 2)];
+  const first = rows[0];
+  return {
+    title: `LIVE DATA PREVIEW // ${sourceName.toUpperCase()} (${rows.length} ROWS, MEDIAN \u0394t=${dt.toFixed(3)}s)`,
+    dt,
+    totalMass,
+    droppedRows,
+    y0: { a: first.a, b: first.b, c: first.c, d: first.d },
+    rows
+  };
+}
+
+function setCSVPreviewError(message) {
+  state.ingestedCSV = null;
+  document.getElementById('csv-table-title').textContent = 'LIVE DATA PREVIEW // CSV COULD NOT BE LOADED';
+  document.getElementById('csv-summary-metrics').textContent = message;
+  document.getElementById('csv-preview-tbody').innerHTML = '';
+}
+
+async function loadSampleCSV(preset) {
+  const loadToken = ++state.csvLoadToken;
+  if (preset === 'completion') {
+    document.getElementById('csv-table-title').textContent = 'LIVE DATA PREVIEW // LOADING COMPLETION TEST CSV';
+    document.getElementById('csv-summary-metrics').textContent = 'Loading the included completion test data…';
+    try {
+      const url = new URL('kaggle_synthetic_reaction_data/completion/test.csv', document.baseURI);
+      const response = await fetch(url, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`The included CSV request returned HTTP ${response.status}.`);
+      const content = await response.text();
+      if (loadToken !== state.csvLoadToken) return;
+      state.ingestedCSV = parseCSVText(content, 'KAGGLE COMPLETION TEST CSV');
+      renderCSVPreviewTable();
+    } catch (error) {
+      if (loadToken !== state.csvLoadToken) return;
+      setCSVPreviewError(error.message || 'The included completion CSV could not be loaded.');
+    }
+    return;
+  }
+
   let rows = [];
   let title = '';
-  let dt = 0.5;
   let y0 = { a: 1.0, b: 1.0, c: 0.0, d: 0.0 };
 
-  if (preset === 'completion') {
-    title = 'LIVE DATA PREVIEW // KAGGLE COMPLETION SPLIT (200 PTS, \u0394t=0.5s)';
-    dt = 0.5;
-    const sim = simulateSystem('completion', state.activeModel, y0);
-    for (let i = 0; i < sim.N; i++) {
-      rows.push({ idx: i, t: sim.tArr[i], a: sim.trueA[i], b: sim.trueB[i], c: sim.trueC[i], d: sim.trueD[i], imputedCol: null });
-    }
-  } else if (preset === 'corrupted') {
-    title = 'LIVE DATA PREVIEW // CORRUPTED TELEMETRY STREAM WITH AUTO-IMPUTED NaNs (101 PTS, \u0394t=1.0s)';
-    dt = 1.0;
+  if (preset === 'corrupted') {
+    title = 'BUILT-IN CORRUPTED TELEMETRY DEMO (101 PTS, \u0394t=1.0s)';
     const sim = simulateSystem('reconstruction', state.activeModel, y0);
     for (let i = 0; i < sim.N; i++) {
       let a = sim.trueA[i], b = sim.trueB[i], c = sim.trueC[i], d = sim.trueD[i];
@@ -3515,8 +3644,7 @@ function loadSampleCSV(preset) {
       rows.push({ idx: i, t: sim.tArr[i], a, b, c, d, imputedCol });
     }
   } else if (preset === 'offnominal') {
-    title = 'LIVE DATA PREVIEW // OFF-NOMINAL REACTOR INITIAL STATE y(0)=[1.40, 0.60, 0.00, 0.00] (101 PTS, \u0394t=1.0s)';
-    dt = 1.0;
+    title = 'BUILT-IN OFF-NOMINAL DEMO y(0)=[1.40, 0.60, 0.00, 0.00] (101 PTS, \u0394t=1.0s)';
     y0 = { a: 1.4, b: 0.6, c: 0.0, d: 0.0 };
     const sim = simulateSystem('reconstruction', state.activeModel, y0);
     for (let i = 0; i < sim.N; i++) {
@@ -3524,7 +3652,15 @@ function loadSampleCSV(preset) {
     }
   }
 
-  state.ingestedCSV = { title, dt, y0, rows };
+  if (loadToken !== state.csvLoadToken) return;
+  state.ingestedCSV = {
+    title: `LIVE DATA PREVIEW // ${title}`,
+    dt: 1.0,
+    totalMass: y0.a + y0.b + y0.c + y0.d,
+    droppedRows: 0,
+    y0,
+    rows
+  };
   renderCSVPreviewTable();
 }
 
@@ -3535,83 +3671,66 @@ function handleCSVFileSelect(event) {
 }
 
 function parseUploadedCSVFile(file) {
+  const loadToken = ++state.csvLoadToken;
   const reader = new FileReader();
   reader.onload = function(e) {
-    const text = e.target.result;
-    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
-    if (lines.length < 2) return;
-
-    const header = lines[0].split(',').map(h => h.trim().toLowerCase());
-    const idxA = header.findIndex(h => h.includes('mass a') || h === 'a');
-    const idxB = header.findIndex(h => h.includes('mass b') || h === 'b');
-    const idxC = header.findIndex(h => h.includes('mass c') || h === 'c');
-    const idxD = header.findIndex(h => h.includes('mass d') || h === 'd');
-
-    const rows = [];
-    for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i].split(',').map(c => c.trim());
-      if (cols.length < 4) continue;
-      const rowNum = i - 1;
-      let a = parseFloat(cols[idxA >= 0 ? idxA : 1]);
-      let b = parseFloat(cols[idxB >= 0 ? idxB : 2]);
-      let c = parseFloat(cols[idxC >= 0 ? idxC : 3]);
-      let d = parseFloat(cols[idxD >= 0 ? idxD : 4]);
-
-      let imputedCol = null;
-      const vals = [a, b, c, d];
-      const nanCount = vals.filter(v => isNaN(v)).length;
-      if (nanCount === 1) {
-        const knownSum = vals.reduce((acc, v) => isNaN(v) ? acc : acc + v, 0.0);
-        if (isNaN(a)) { a = 2.0 - knownSum; imputedCol = 'mass A'; }
-        else if (isNaN(b)) { b = 2.0 - knownSum; imputedCol = 'mass B'; }
-        else if (isNaN(c)) { c = 2.0 - knownSum; imputedCol = 'mass C'; }
-        else if (isNaN(d)) { d = 2.0 - knownSum; imputedCol = 'mass D'; }
-      } else {
-        a = isNaN(a) ? 0 : a;
-        b = isNaN(b) ? 0 : b;
-        c = isNaN(c) ? 0 : c;
-        d = isNaN(d) ? 0 : d;
-      }
-
-      const dt = SPLIT_CONFIGS[state.activeSplit].dt;
-      rows.push({ idx: rowNum, t: rowNum * dt, a, b, c, d, imputedCol });
-    }
-
-    if (rows.length > 0) {
-      const first = rows[0];
-      state.ingestedCSV = {
-        title: `LIVE DATA PREVIEW // UPLOADED FILE: ${file.name.toUpperCase()} (${rows.length} ROWS)`,
-        dt: SPLIT_CONFIGS[state.activeSplit].dt,
-        y0: { a: first.a, b: first.b, c: first.c, d: first.d },
-        rows
-      };
+    if (loadToken !== state.csvLoadToken) return;
+    try {
+      state.ingestedCSV = parseCSVText(e.target.result, `UPLOADED FILE: ${file.name}`);
       renderCSVPreviewTable();
+    } catch (error) {
+      setCSVPreviewError(error.message || 'The uploaded CSV could not be read.');
     }
+  };
+  reader.onerror = function() {
+    if (loadToken === state.csvLoadToken) setCSVPreviewError('The selected CSV file could not be read.');
   };
   reader.readAsText(file);
 }
 
-function renderCSVPreviewTable() {
-  if (!state.ingestedCSV) {
-    loadSampleCSV('completion');
-    return;
+function integrateModelOnTimeGrid(modelKey, y0, timeGrid) {
+  if (!timeGrid.length) return [];
+  const trajectory = [[...y0]];
+  const derivative = stateVector => evalModelVectorField(modelKey, stateVector);
+  for (let i = 1; i < timeGrid.length; i++) {
+    const dt = timeGrid[i] - timeGrid[i - 1];
+    const next = stepODESolver(derivative, trajectory[i - 1], dt, state.solverScheme || 'euler');
+    if (next.some(value => !Number.isFinite(value))) {
+      throw new Error(`${modelKey} became numerically unstable near t=${timeGrid[i]}s.`);
+    }
+    trajectory.push(next);
   }
+  return trajectory;
+}
+
+function renderCSVPreviewTable() {
+  if (!state.ingestedCSV) return;
   const data = state.ingestedCSV;
-  const sim = simulateSystem(state.activeSplit, state.activeModel, data.y0);
   const tbody = document.getElementById('csv-preview-tbody');
   document.getElementById('csv-table-title').textContent = data.title;
 
   let imputedCount = 0;
   let sqErr = 0;
-  const maxRows = Math.min(data.rows.length, sim.N);
+  const maxRows = data.rows.length;
   let html = '';
+  let predictions;
+  try {
+    predictions = integrateModelOnTimeGrid(
+      state.activeModel,
+      [data.y0.a, data.y0.b, data.y0.c, data.y0.d],
+      data.rows.map(row => row.t)
+    );
+  } catch (error) {
+    setCSVPreviewError(error.message || 'The active model could not predict this dataset.');
+    return;
+  }
 
   for (let i = 0; i < maxRows; i++) {
     const r = data.rows[i];
     if (r.imputedCol) imputedCount++;
-    const pa = sim.predA[i], pb = sim.predB[i], pc = sim.predC[i], pd = sim.predD[i];
-    const pSum = sim.totalPredMass[i];
-    const drift = Math.abs(pSum - sim.m0);
+    const [pa, pb, pc, pd] = predictions[i];
+    const pSum = pa + pb + pc + pd;
+    const drift = Math.abs(pSum - data.totalMass);
     sqErr += Math.pow(pa - r.a, 2) + Math.pow(pb - r.b, 2) + Math.pow(pc - r.c, 2) + Math.pow(pd - r.d, 2);
 
     const statusBadge = r.imputedCol
@@ -3642,7 +3761,7 @@ function renderCSVPreviewTable() {
   tbody.innerHTML = html;
   const mse = maxRows > 0 ? sqErr / (maxRows * 4) : 0;
   document.getElementById('csv-summary-metrics').textContent =
-    `Rows: ${maxRows} \u2022 Auto-Imputed NaNs: ${imputedCount} \u2022 Active Model: ${state.activeModel} \u2022 Dataset MSE: ${mse.toExponential(2)} g\u00b2`;
+    `Rows: ${maxRows} \u2022 Auto-Imputed NaNs: ${imputedCount} \u2022 Dropped rows: ${data.droppedRows || 0} \u2022 Active Model: ${state.activeModel} \u2022 Dataset MSE: ${mse.toExponential(2)} g\u00b2`;
 }
 
 function setupDragAndDrop() {
@@ -3712,7 +3831,7 @@ async function checkLocalApiStatus() {
     return data;
   } catch (error) {
     setLocalApiStatus('LOCAL API OFFLINE', false);
-    document.getElementById('api-result-summary').textContent = 'The static preview cannot run the Python model. In the downloaded project, open a terminal in the repo, install requirements, run python train_stoich_ode.py, then start FastAPI with python -m uvicorn api:app --reload --host 127.0.0.1 --port 8001. Open http://127.0.0.1:8001 to connect this panel to the fitted model.';
+    document.getElementById('api-result-summary').textContent = 'The static preview cannot run the Python model. In the downloaded project, open a terminal in the repo, install requirements, run python train_stoich_ode.py, then start FastAPI with python -m uvicorn api:app --host 127.0.0.1 --port 8001. Open http://127.0.0.1:8001 to connect this panel to the fitted model.';
     return null;
   }
 }
@@ -3755,7 +3874,8 @@ async function runLocalModelPrediction() {
     const rateLine = result.discovered_rates
       ? `\nFitted rates: k₁=${result.discovered_rates.k1_for_A_plus_B_to_C_plus_D.toFixed(6)} g⁻¹s⁻¹ · k₂=${result.discovered_rates.k2_for_C_to_B.toFixed(6)} s⁻¹`
       : '';
-    summary.textContent = `${result.model} // ${result.model_name}\nSource: ${result.source}\nTraining: ${result.training.training_split}, ${result.training.training_rows} rows through t=${result.training.training_end_s}s\nReturned ${metrics.rows} predictions · max mass drift ${metrics.max_mass_drift_g.toExponential(3)} g${rateLine}`;
+    const warningLine = metrics.warnings && metrics.warnings.length ? `\nWARNING: ${metrics.warnings.join(' ')}` : '';
+    summary.textContent = `${result.model} // ${result.model_name}\nSource: ${result.source}\nTraining: ${result.training.training_split}, ${result.training.training_rows} rows through t=${result.training.training_end_s}s\nReturned ${metrics.rows} predictions · max mass drift ${metrics.max_mass_drift_g.toExponential(3)} g${rateLine}${warningLine}`;
     tbody.innerHTML = result.predictions.map(row => `<tr><td>${row.t.toFixed(3)}</td><td class="num">${row.A.toFixed(6)}</td><td class="num">${row.B.toFixed(6)}</td><td class="num">${row.C.toFixed(6)}</td><td class="num">${row.D.toFixed(6)}</td><td class="num">${row.total_mass.toFixed(6)}</td></tr>`).join('');
     tableWrap.style.display = 'block';
     setLocalApiStatus('PREDICTION FROM PYTHON API', true);

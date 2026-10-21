@@ -12,6 +12,7 @@ import joblib
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from train_stoich_ode import (
@@ -40,6 +41,11 @@ app = FastAPI(
     ),
     version="1.0.0",
 )
+app.mount(
+    "/kaggle_synthetic_reaction_data",
+    StaticFiles(directory=ROOT / "kaggle_synthetic_reaction_data"),
+    name="benchmark-data",
+)
 
 
 class PredictionRequest(BaseModel):
@@ -47,7 +53,7 @@ class PredictionRequest(BaseModel):
     initial_state: list[float] = Field(default=[1.0, 1.0, 0.0, 0.0])
     start_time: float = Field(default=0.0, ge=0.0)
     end_time: float = Field(default=20.0, gt=0.0, le=200.0)
-    step_size: float = Field(default=1.0, gt=0.0, le=10.0, description="Maximum time spacing between returned prediction rows.")
+    step_size: float = Field(default=0.1, gt=0.0, le=10.0, description="Maximum time spacing between returned prediction rows.")
 
 
 @lru_cache(maxsize=1)
@@ -186,6 +192,15 @@ def predict(request: PredictionRequest):
     ]
     initial_total = float(np.sum(y0))
     max_mass_drift = float(np.max(np.abs(np.sum(predicted, axis=1) - initial_total)))
+    minimum_mass = float(np.min(predicted))
+    negative_mass_tolerance = 1e-10 * max(1.0, abs(initial_total))
+    warnings = []
+    if minimum_mass < -negative_mass_tolerance:
+        warnings.append(
+            "The model predicted a negative species mass "
+            f"(minimum {minimum_mass:.6g} g). This trajectory is outside the non-negative mass domain; "
+            "try a smaller step, a shorter horizon, or a different model."
+        )
 
     result = {
         "model": request.model,
@@ -201,7 +216,8 @@ def predict(request: PredictionRequest):
             "rows": len(rows),
             "initial_total_mass_g": initial_total,
             "max_mass_drift_g": max_mass_drift,
-            "minimum_predicted_species_mass_g": float(np.min(predicted)),
+            "minimum_predicted_species_mass_g": minimum_mass,
+            "warnings": warnings,
         },
         "predictions": rows,
     }
